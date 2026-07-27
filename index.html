@@ -22,7 +22,7 @@
     "name": "Dr. Zahir Hasan",
     "url": "https://drzahirhasan.com",
     "jobTitle": "Author",
-    "description": "Dr. Zahir Hasan is an author of children's fantasy series, including The Whispering Realms and Tasneem's Glider, and books on political science, law, and social issues such as The Permanent Suspect, A Manufactured War, The Sovereignty of Truth, The Politics of Removal, and Japan's Strategic Awakening.",
+    "description": "Dr. Zahir Hasan is an author of children's fantasy series, including The Whispering Realms and The Elk Kingdom Chronicles, and books on political science, law, and social issues such as The Permanent Suspect, A Manufactured War, The Sovereignty of Truth, The Politics of Removal, and Japan's Strategic Awakening.",
     "knowsAbout": ["Children's Literature", "Fantasy Fiction", "Political Science", "International Relations", "Law and Social Issues"],
     "mainEntityOfPage": {"@type": "WebPage", "@id": "https://drzahirhasan.com/"}
   }
@@ -43,8 +43,9 @@
         </button>
         <ul class="nav-links">
           <li><a href="index.html" class="active">Home</a></li>
-          <li><a href="childrens-books.html">Children’s Books</a></li>
+          <li><a href="childrens-books.html">Children's Books</a></li>
           <li><a href="political-science.html">Political Science</a></li>
+          <li><a href="apps.html">Apps</a></li>
           <li><a href="about.html">About</a></li>
           <li><a href="contact.html">Contact</a></li>
         </ul>
@@ -59,10 +60,10 @@
           <span class="hero-badge">Author</span>
           <h1>Stories that shape how we see the world</h1>
           <p class="lead">
-            Children’s fantasy that opens doors to wonder, and books that examine power, truth, and the politics of our time.
+            Children's fantasy that opens doors to wonder, and books that examine power, truth, and the politics of our time.
           </p>
           <div class="hero-actions">
-            <a href="childrens-books.html" class="btn btn-primary">Children’s Books</a>
+            <a href="childrens-books.html" class="btn btn-primary">Children's Books</a>
             <a href="political-science.html" class="btn btn-secondary">Political Science</a>
           </div>
         </div>
@@ -73,44 +74,15 @@
       <div class="container">
         <div class="section-header">
           <div class="ornament"></div>
-          <h2>Children’s Fantasy</h2>
+          <h2>Children's Fantasy</h2>
           <p>Gentle, illustrated worlds of soft magic, listening, and quiet courage.</p>
         </div>
 
-        <div class="books-grid">
-          <article class="book-card">
-            <div class="book-cover whisper">
-              <div class="book-cover-inner">
-                <div class="book-cover-title">The Whispering Realms</div>
-                <div class="book-cover-sub">Episode 1 · The First Shadow</div>
-              </div>
-            </div>
-            <div class="book-body">
-              <div class="book-meta">Fantasy Series · Ages 7–12</div>
-              <h3>The Whispering Realms</h3>
-              <p>Follow young Aelira as she steps into a world where shadows begin to speak and ancient realms awaken.</p>
-              <div class="book-footer">
-                <span class="status-pill available">Episode 1 Complete</span>
-                <a href="whispering-realms.html" class="btn btn-primary" style="padding: 0.55rem 1.1rem; font-size: 0.85rem;">View Series</a>
-              </div>
-            </div>
-          </article>
-
-          <article class="book-card">
-            <div class="book-body" style="padding-top: 1.75rem;">
-              <div class="book-meta">Children’s Picture Book</div>
-              <h3>Tasneem’s Glider</h3>
-              <p>A children’s story about Tasneem and her glider.</p>
-              <div class="book-footer">
-                <span class="status-pill available">Available</span>
-                <a href="https://www.amazon.co.jp/dp/B0H9CQF2D7" class="btn btn-primary" style="padding: 0.55rem 1.1rem; font-size: 0.85rem;" target="_blank" rel="noopener">Buy on Amazon</a>
-              </div>
-            </div>
-          </article>
-        </div>
+        <div class="books-grid" id="home-series-grid"></div>
+        <div class="books-grid" id="home-childrens-grid" style="margin-top: 0;"></div>
 
         <div style="text-align: center; margin-top: 2rem;">
-          <a href="childrens-books.html" class="btn btn-ghost">View All Children’s Books</a>
+          <a href="childrens-books.html" class="btn btn-ghost">View All Children's Books</a>
         </div>
       </div>
     </section>
@@ -123,29 +95,7 @@
           <p>Works examining power, sovereignty, conflict, and the struggle over truth.</p>
         </div>
 
-        <div class="books-grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
-          <article class="book-card">
-            <div class="book-body" style="padding-top: 1.5rem;">
-              <h3 style="font-size: 1.15rem;">A Manufactured War</h3>
-              <p style="font-size: 0.95rem;">How conflicts are constructed, sustained, and sold.</p>
-              <div class="book-footer">
-                <a href="https://www.amazon.co.jp/dp/B0H9J8XMFW" class="btn btn-primary" style="padding: 0.45rem 0.9rem; font-size: 0.8rem;" target="_blank" rel="noopener">Buy on Amazon</a>
-              </div>
-            </div>
-          </article>
-          <article class="book-card">
-            <div class="book-body" style="padding-top: 1.5rem;">
-              <h3 style="font-size: 1.15rem;">The Permanent Suspect</h3>
-              <p style="font-size: 0.95rem;">How suspicion becomes permanent.</p>
-            </div>
-          </article>
-          <article class="book-card">
-            <div class="book-body" style="padding-top: 1.5rem;">
-              <h3 style="font-size: 1.15rem;">The Sovereignty of Truth</h3>
-              <p style="font-size: 0.95rem;">On the struggle between power and truth.</p>
-            </div>
-          </article>
-        </div>
+        <div class="books-grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));" id="home-political-grid"></div>
 
         <div style="text-align: center; margin-top: 2.5rem;">
           <a href="political-science.html" class="btn btn-secondary">View All Political Science Books</a>
@@ -171,14 +121,15 @@
         <div>
           <div class="footer-brand">Dr. Zahir <span>Hasan</span></div>
           <p style="color:#a8a29a; font-size:0.95rem; max-width:280px;">
-            Author of children’s fantasy and works on political science, law, and social issues.
+            Author of children's fantasy and works on political science, law, and social issues.
           </p>
         </div>
         <div class="footer-links">
           <h4>Explore</h4>
           <ul>
-            <li><a href="childrens-books.html">Children’s Books</a></li>
+            <li><a href="childrens-books.html">Children's Books</a></li>
             <li><a href="political-science.html">Political Science</a></li>
+            <li><a href="apps.html">Apps</a></li>
           </ul>
         </div>
         <div class="footer-links">
@@ -196,6 +147,8 @@
     </div>
   </footer>
 
+  <script src="js/books-data.js"></script>
+  <script src="js/render-books.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>
