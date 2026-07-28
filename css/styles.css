@@ -261,7 +261,7 @@ p {
   content: "";
   position: absolute;
   inset: 0;
-  background: 
+  background:
     radial-gradient(ellipse 80% 60% at 70% 20%, rgba(61, 107, 79, 0.07), transparent),
     radial-gradient(ellipse 60% 50% at 20% 80%, rgba(201, 162, 39, 0.06), transparent);
   pointer-events: none;
@@ -338,6 +338,14 @@ p {
 
 .book-cover.elk {
   background: linear-gradient(145deg, #f0ebe0 0%, #e5d9c5 50%, #d9cbb0 100%);
+}
+
+.book-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
 }
 
 .book-cover-inner {
@@ -436,10 +444,19 @@ p {
   justify-content: center;
   box-shadow: var(--shadow-hover);
   max-width: 340px;
+  overflow: hidden;
 }
 
 .series-cover-large.elk {
   background: linear-gradient(145deg, #f0ebe0 0%, #e5d9c5 50%, #d9cbb0 100%);
+}
+
+.series-cover-large img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
 }
 
 .character-list {
