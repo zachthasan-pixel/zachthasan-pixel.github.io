@@ -46,11 +46,11 @@ const CHILDRENS_SERIES = [
   },
   {
     title: "The Elk Kingdom Chronicles",
-    subtitle: "Book 1 · In Development",
+    subtitle: "Book 1 · The Silent Veil — Available Now",
     image: "images/covers/elk-kingdom.jpg",
     category: "Fantasy Series · Ages 6–11",
     description: "Deep in an ancient forest kingdom, the Silent Veil protects more than just the trees. Young Elian begins to hear what others cannot — and learns what it means to be a Listener.",
-    badge: "In Development",
+    badge: "Available",
     url: "elk-kingdom.html",
     urlLabel: "Explore the Kingdom"
   }
@@ -65,6 +65,24 @@ const CHILDRENS_BOOKS = [
     image: "images/covers/whispering-realms.jpg",
     badge: "Available",
     buyUrl: "https://www.amazon.co.jp/dp/B0HBCPSJ4X",
+    featured: false
+  },
+  {
+    title: "The Elk Kingdom: Book I – The Silent Veil",
+    category: "Fantasy · The Elk Kingdom Chronicles",
+    description: "Six-year-old Elian has always heard more than most. When the ancient pact between the Great Elk and the First Elf begins to break early, he must decide whether to answer a call that could save everything he loves.",
+    image: "images/covers/elk-kingdom.jpg",
+    badge: "Available",
+    buyUrl: "https://www.amazon.com/dp/B0HBRTFMD7",
+    featured: false
+  },
+  {
+    title: "Aidan and the Ember Hollow",
+    category: "Children's Fantasy · Book 1: The Compass Awakens",
+    description: "Aidan's grandmother left him an old brass compass — dull, ordinary, easy to forget. Until the day it starts to hum. A warm, wonder-filled adventure about friendship, hidden gifts, and the courage to step through the door nobody else can see.",
+    image: "images/covers/aidan-ember-hollow.jpg",
+    badge: "Available",
+    buyUrl: "https://www.amazon.com/dp/B0HBNG3HZ6",
     featured: false
   },
   {
