@@ -7,15 +7,25 @@
    books-data.js instead.
    ============================================================ */
 
+// A cover picture box, used whenever a book has an "image" set.
+function coverBoxHTML(book) {
+  if (!book.image) return '';
+  return `<div class="book-cover"><img src="${book.image}" alt="${book.title} cover" loading="lazy"></div>`;
+}
+
 function seriesCardHTML(book) {
-  return `
-    <article class="book-card">
+  const cover = book.image
+    ? coverBoxHTML(book)
+    : `
       <div class="book-cover ${book.cover || ''}">
         <div class="book-cover-inner">
           <div class="book-cover-title">${book.title}</div>
           <div class="book-cover-sub">${book.subtitle || ''}</div>
         </div>
-      </div>
+      </div>`;
+  return `
+    <article class="book-card">
+      ${cover}
       <div class="book-body">
         <div class="book-meta">${book.category || ''}</div>
         <h3>${book.title}</h3>
@@ -29,12 +39,14 @@ function seriesCardHTML(book) {
 }
 
 function bookCardHTML(book) {
+  const cover = coverBoxHTML(book);
   const buyButton = book.buyUrl
     ? `<a href="${book.buyUrl}" class="btn btn-primary" style="padding: 0.55rem 1.1rem; font-size: 0.85rem;" target="_blank" rel="noopener">${book.buyLabel || 'Buy on Amazon'}</a>`
     : '';
   return `
     <article class="book-card">
-      <div class="book-body" style="padding-top: 1.75rem;">
+      ${cover}
+      <div class="book-body" style="padding-top: ${book.image ? '1.5rem' : '1.75rem'};">
         <div class="book-meta">${book.category || ''}</div>
         <h3>${book.title}</h3>
         <p>${book.description || ''}</p>

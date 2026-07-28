@@ -14,12 +14,18 @@
    2. Copy one whole block, from the opening { to the closing },
       and paste it as a new entry in that same list.
    3. Change the text inside the quotes to match the new book.
-   4. Save the file. That's it — no other page needs to change.
+   4. To show a real cover picture, add the image file to the
+      images/covers folder in the website files, then set
+      image: "images/covers/your-file-name.jpg" below. Leave the
+      image line out entirely if you don't have a cover yet — the
+      book will just show its title and description instead.
+   5. Save the file. That's it — no other page needs to change.
 
    Fields you can use for each book:
      title       - the book's name
      category    - a short line above the title (e.g. "Children's Picture Book")
      description - one or two sentences about the book
+     image       - path to the cover picture (optional, see above)
      buyUrl      - the Amazon (or other store) link — leave as null if not for sale yet
      buyLabel    - button text, defaults to "Buy on Amazon" if left out
      badge       - the little pill/tag, e.g. "Available" or "Coming Soon"
@@ -31,7 +37,7 @@ const CHILDRENS_SERIES = [
   {
     title: "The Whispering Realms",
     subtitle: "Episode 1 · The First Shadow",
-    cover: "whisper",
+    image: "images/covers/whispering-realms.jpg",
     category: "Fantasy Series · Ages 7–12",
     description: "Follow young Aelira as she steps into a world where shadows begin to speak and ancient realms awaken.",
     badge: "Episode 1 Available",
@@ -41,7 +47,7 @@ const CHILDRENS_SERIES = [
   {
     title: "The Elk Kingdom Chronicles",
     subtitle: "Book 1 · In Development",
-    cover: "elk",
+    image: "images/covers/elk-kingdom.jpg",
     category: "Fantasy Series · Ages 6–11",
     description: "Deep in an ancient forest kingdom, the Silent Veil protects more than just the trees. Young Elian begins to hear what others cannot — and learns what it means to be a Listener.",
     badge: "In Development",
@@ -56,6 +62,7 @@ const CHILDRENS_BOOKS = [
     title: "The First Shadow",
     category: "Fantasy · The Whispering Realms",
     description: "The opening story of The Whispering Realms. Young Aelira discovers that some shadows carry messages — and some messages change everything.",
+    image: "images/covers/whispering-realms.jpg",
     badge: "Available",
     buyUrl: "https://www.amazon.co.jp/dp/B0HBCPSJ4X",
     featured: false
@@ -64,6 +71,7 @@ const CHILDRENS_BOOKS = [
     title: "Tasneem's Glider",
     category: "Children's Picture Book",
     description: "How Persistence Found the Wind. A story about Tasneem, her glider, and the power of not giving up.",
+    image: "images/covers/tasneems-glider.jpg",
     badge: "Available",
     buyUrl: "https://www.amazon.co.jp/dp/B0H9CQF2D7",
     featured: true
@@ -72,6 +80,7 @@ const CHILDRENS_BOOKS = [
     title: "Aidan and the Butterfly Kingdom",
     category: "Children's Picture Book",
     description: "A Kingdom of Dreamo Story. Young Aidan steps into a magical butterfly kingdom full of wonder and discovery.",
+    image: "images/covers/aidan-butterfly-kingdom.jpg",
     badge: "Available",
     buyUrl: "https://www.amazon.co.jp/dp/B0H956VRZD",
     featured: false
@@ -80,6 +89,7 @@ const CHILDRENS_BOOKS = [
     title: "Maz and the Map of Whispering Stars",
     category: "Children's Picture Book",
     description: "A story of maps, stars, and the quiet magic of finding your way.",
+    image: "images/covers/maz-whispering-stars.jpg",
     badge: "Available",
     buyUrl: "https://www.amazon.co.jp/dp/B0HB62P7NN",
     featured: false
@@ -88,6 +98,7 @@ const CHILDRENS_BOOKS = [
     title: "The Little Robo",
     category: "Children's Picture Book",
     description: "A gentle story about a small robot and the big feelings that come with growing and belonging.",
+    image: "images/covers/little-robo.jpg",
     badge: "Available",
     buyUrl: "https://www.amazon.co.jp/dp/B0H8XV9SHK",
     featured: false
@@ -96,6 +107,7 @@ const CHILDRENS_BOOKS = [
     title: "The Code of the Cosmic Compass",
     category: "Children's Adventure",
     description: "An M1Z3 Adventure. A cosmic journey of codes, compasses, and courage.",
+    image: "images/covers/cosmic-compass.jpg",
     badge: "Available",
     buyUrl: "https://www.amazon.co.jp/dp/B0HBMQ9MQ9",
     featured: false
@@ -104,6 +116,7 @@ const CHILDRENS_BOOKS = [
     title: "Dash and the Morning Spark",
     category: "Children's Picture Book",
     description: "A bright morning story about energy, movement, and starting the day with heart.",
+    image: "images/covers/dash-morning-spark.jpg",
     badge: "Available",
     buyUrl: "https://www.amazon.co.jp/dp/B0H9HWWKB3",
     featured: false
@@ -112,6 +125,7 @@ const CHILDRENS_BOOKS = [
     title: "The Spiderweb Mystery",
     category: "Children's Picture Book",
     description: "Curiosity is a Superpower. A gentle mystery that celebrates asking questions and looking closer.",
+    image: "images/covers/spiderweb-mystery.jpg",
     badge: "Available",
     buyUrl: "https://www.amazon.co.jp/dp/B0H9HJF5P2",
     featured: false
@@ -124,6 +138,7 @@ const POLITICAL_BOOKS = [
     title: "The Permanent Suspect",
     category: "Political Science / Law",
     description: "An examination of how suspicion becomes permanent — and what that means for justice, identity, and the state.",
+    image: "images/covers/permanent-suspect.jpg",
     badge: "Available",
     buyUrl: "https://www.amazon.co.jp/dp/B0HBLT47RP",
     featured: true
@@ -132,6 +147,7 @@ const POLITICAL_BOOKS = [
     title: "A Manufactured War",
     category: "Political Science / International Relations",
     description: "How conflicts are constructed, sustained, and sold — and who benefits from the stories we are told about war.",
+    image: "images/covers/manufactured-war.jpg",
     badge: "Available",
     buyUrl: "https://www.amazon.co.jp/dp/B0H9J8XMFW",
     featured: true
@@ -140,6 +156,7 @@ const POLITICAL_BOOKS = [
     title: "The Sovereignty of Truth",
     category: "Political Philosophy",
     description: "On the struggle between power and truth, and why the right to define reality has become one of the central battles of our time.",
+    image: "images/covers/sovereignty-of-truth.jpg",
     badge: "Available",
     buyUrl: "https://www.amazon.co.jp/dp/B0HB4JY8P9",
     featured: true
@@ -156,6 +173,7 @@ const POLITICAL_BOOKS = [
     title: "Japan's Strategic Awakening",
     category: "International Relations / Strategy",
     description: "Law, Capability, and the Realignment of Indo-Pacific Security. An analysis of Japan's evolving security posture and the strategic choices reshaping the Indo-Pacific.",
+    image: "images/covers/japans-strategic-awakening.jpg",
     badge: "Available",
     buyUrl: "https://www.amazon.co.jp/dp/B0H9X5HM5L",
     featured: false
