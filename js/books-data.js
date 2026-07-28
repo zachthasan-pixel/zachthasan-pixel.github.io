@@ -165,6 +165,7 @@ const POLITICAL_BOOKS = [
     title: "The Politics of Removal",
     category: "Political Science / Social Issues",
     description: "An inquiry into displacement, exclusion, and the political logic that decides who belongs and who is removed.",
+    image: "images/covers/politics-of-removal.jpg",
     badge: "Available",
     buyUrl: "https://www.amazon.co.jp/dp/B0H9SKQRPC",
     featured: false
