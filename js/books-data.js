@@ -196,6 +196,15 @@ const POLITICAL_BOOKS = [
     badge: "Available",
     buyUrl: "https://www.amazon.co.jp/dp/B0H9X5HM5L",
     featured: false
+  },
+  {
+    title: "The Arab Dilemma",
+    category: "Political Science / International Relations",
+    description: "Gaza, Atrocity, and the Politics of Abandonment After October 7. Drawing on international law, diplomatic history, and the shifting politics of the Middle East, this book traces why Arab governments and the wider international community largely stood aside as the war in Gaza unfolded.",
+    image: "images/covers/arab-dilemma.jpg",
+    badge: "Available",
+    buyUrl: "https://www.amazon.com/dp/B0HDPS31RK",
+    featured: false
   }
 ];
 
