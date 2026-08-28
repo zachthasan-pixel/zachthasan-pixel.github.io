@@ -36,11 +36,11 @@
 const CHILDRENS_SERIES = [
   {
     title: "The Whispering Realms",
-    subtitle: "Episode 1 · The First Shadow",
+    subtitle: "Episodes 1 & 2 · The First Shadow · The Weakening Seal",
     image: "images/covers/whispering-realms.jpg",
     category: "Fantasy Series · Ages 7–12",
     description: "Follow young Aelira as she steps into a world where shadows begin to speak and ancient realms awaken.",
-    badge: "Episode 1 Available",
+    badge: "2 Episodes Available",
     url: "whispering-realms.html",
     urlLabel: "View Series"
   },
@@ -65,6 +65,15 @@ const CHILDRENS_BOOKS = [
     image: "images/covers/whispering-realms.jpg",
     badge: "Available",
     buyUrl: "https://www.amazon.co.jp/dp/B0HBCPSJ4X",
+    featured: false
+  },
+  {
+    title: "The Weakening Seal",
+    category: "Fantasy · The Whispering Realms · Episode 2",
+    description: "The shadow Aelira saw was only the first warning. Now the old seal is failing, and something older than the forest has started to learn her name.",
+    image: "https://m.media-amazon.com/images/I/81jjVHAT5BL._SL700_.jpg",
+    badge: "Available",
+    buyUrl: "https://www.amazon.com/dp/B0HGD839HJ",
     featured: false
   },
   {
@@ -198,12 +207,66 @@ const POLITICAL_BOOKS = [
     featured: false
   },
   {
-    title: "The Arab Dilemma",
+    title: "Elbows Up",
     category: "Political Science / International Relations",
-    description: "Gaza, Atrocity, and the Politics of Abandonment After October 7. Drawing on international law, diplomatic history, and the shifting politics of the Middle East, this book traces why Arab governments and the wider international community largely stood aside as the war in Gaza unfolded.",
-    image: "images/covers/arab-dilemma.jpg",
+    description: "Canada, the United States, and the Rupture of a Continental Partnership. How the deepest trade relationship of the postwar era came apart between 2025 and 2026 — and what the break means for both countries.",
+    image: "https://m.media-amazon.com/images/I/816lGZBqohL._SL700_.jpg",
+    badge: "Available",
+    buyUrl: "https://www.amazon.com/dp/B0HGBG49QQ",
+    featured: false
+  },
+  {
+    title: "NATO at the Breaking Point",
+    category: "International Relations / Security",
+    description: "War in Ukraine, American Uncertainty, and the Future of European Security. NATO has never looked stronger on paper, or been more exposed in practice — on the hard questions now facing the Alliance.",
+    image: "https://m.media-amazon.com/images/I/81F0qyYf0DL._SL700_.jpg",
+    badge: "Available",
+    buyUrl: "https://www.amazon.com/dp/B0HG5ZQFPS",
+    featured: false
+  },
+  {
+    title: "A Land Unknown",
+    category: "Law / Social Issues",
+    description: "America's New Machinery of Expulsion — and the Case for Ending It. A legal account of how people are removed to countries they have never seen, why nobody technically broke the law, and why that is the problem.",
+    image: "https://m.media-amazon.com/images/I/71Ld-EQG0yL._SL700_.jpg",
+    badge: "Available",
+    buyUrl: "https://www.amazon.com/dp/B0HFLSDR1Q",
+    featured: false
+  },
+  {
+    title: "University Students and Artificial Intelligence",
+    category: "Education / Technology Policy",
+    description: "Adoption, Learning, Integrity, and Governance in Japan, the United States, and Europe. A comparative study of what students actually do with generative AI — and what their universities are doing about it.",
+    image: "https://m.media-amazon.com/images/I/811MnwrKW+L._SL700_.jpg",
+    badge: "Available",
+    buyUrl: "https://www.amazon.com/dp/B0HF7YD1D1",
+    featured: false
+  },
+  {
+    title: "Pakistan's Unfinished Democratic Transition",
+    category: "Political Science / Comparative Politics",
+    description: "Military Tutelage, Institutional Weakness, and the Search for Civilian Supremacy. No prime minister of Pakistan has ever finished a term — an inquiry into why, and into what civilian supremacy would actually take.",
+    image: "https://m.media-amazon.com/images/I/71ERbnTG7CL._SL700_.jpg",
+    badge: "Available",
+    buyUrl: "https://www.amazon.com/dp/B0HF6X3Y25",
+    featured: false
+  },
+  {
+    title: "The Arab Dilemma",
+    category: "Political Science / Middle East",
+    description: "Gaza, Atrocity, and the Politics of Abandonment After October 7. Why did Arab governments — long bound to the Palestinian cause — watch Gaza's destruction and look away?",
+    image: "https://m.media-amazon.com/images/I/71WlNFbq6dL._SL700_.jpg",
     badge: "Available",
     buyUrl: "https://www.amazon.com/dp/B0HDPS31RK",
+    featured: false
+  },
+  {
+    title: "Japan's Unavoidable Choice",
+    category: "Political Science / Social Issues",
+    description: "Immigration, Artificial Intelligence, and the Struggle to Remain a Global Power. Can Japan stay a major power while its population declines? On a choice the country can no longer postpone.",
+    image: "https://m.media-amazon.com/images/I/81nasNUSwEL._SL700_.jpg",
+    badge: "Available",
+    buyUrl: "https://www.amazon.com/dp/B0HDG4TCZC",
     featured: false
   }
 ];
