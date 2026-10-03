@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Earthfall Command: Last Orbit</title>
+<meta name="description" content="Command Earth's last orbital defense network. Build weapons, launch interceptors, and stop an alien invasion before humanity loses the sky.">
+<meta name="theme-color" content="#02040a">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="err"></div>
+
+<div id="hud">
+  <div id="top">
+    <div id="mname">Mission</div>
+    <div id="wave">Wave</div>
+    <div id="scoreBox">SCORE <span id="score">0</span></div>
+    <div id="energy"><div id="energyBar"></div><span id="energyTxt"></span></div>
+    <div id="topBtns"><button id="threatBtn" title="Face nearest threat (Space)">◎</button><button id="muteBtn" title="Mute">🔊</button><button id="pauseBtn" title="Pause (Esc)">II</button></div>
+  </div>
+  <div id="regions"></div>
+  <div id="comms"></div>
+  <div id="bottom">
+    <div id="toolhint"></div>
+    <div id="tools"></div>
+  </div>
+</div>
+
+<div class="screen" id="title">
+  <div class="panel">
+    <div class="eyebrow">Space Defense Force · Orbital Command</div>
+    <h1>EARTHFALL<br>COMMAND</h1>
+    <h2>Last Orbit</h2>
+    <p class="tag">The invaders do not want to destroy Earth. They want to keep it.</p>
+    <div class="btns">
+      <button id="continueBtn" class="primary"></button>
+      <button id="newBtn" class="primary">New Campaign</button>
+      <button id="howBtn">How to Play</button>
+    </div>
+    <p id="bestTxt" class="small"></p>
+    <p class="small">Drag to orbit · scroll or pinch to zoom · tap targets · keys 1–5 select tools</p>
+    <p class="credit">A game by Dr. Zahir Hasan · <span id="ver"></span></p>
+  </div>
+</div>
+
+<div class="screen" id="how">
+  <div class="panel wide">
+    <h2>How to Play</h2>
+    <div class="cols">
+      <div>
+        <h3>Command</h3>
+        <ul>
+          <li><b>Drag</b> to rotate the orbital view. <b>Scroll / pinch</b> to zoom. <b>Space</b> or ◎ turns you toward the nearest threat. Tap a region name on the left to swing the camera to it.</li>
+          <li>Your satellites fire lasers automatically at anything in range. <b>Tap a ship</b> to make it the priority target.</li>
+          <li>Abilities cost <b>command energy</b> ⚡, which regenerates over time.</li>
+        </ul>
+        <h3>Tools</h3>
+        <ul>
+          <li><b>1 · Laser Focus</b> — free. Tap a ship to focus all satellites on it.</li>
+          <li><b>2 · Missiles</b> — homing volley. Best against pods, bombers and the carrier.</li>
+          <li><b>3 · Interceptors</b> — a squadron flies to the point you tap and dogfights everything near it.</li>
+          <li><b>4 · EMP Pulse</b> — breaks shields and stuns ships in a sphere. The only quick answer to Nhal shield ships.</li>
+          <li><b>5 · Planetary Shield</b> — domes a region. Nothing lands or hits it while the dome holds.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Threats</h3>
+        <ul>
+          <li><span class="sw veyr"></span><b>Veyr scouts and bombers</b> — fast, numerous, dive straight into cities.</li>
+          <li><span class="sw nhal"></span><b>Nhal shield ships</b> — park in orbit, bombard regions and hack your satellites. Lasers barely scratch their shields.</li>
+          <li><span class="sw orun"></span><b>Orun landing pods</b> — armored. If one lands it drains the region's population until destroyed.</li>
+          <li><span class="sw orun"></span><b>Orun carriers</b> — mission 5 and the flagship in mission 10. Their shield drops for six seconds in every ten; an EMP drops it instantly.</li>
+        </ul>
+        <h3>The planet is your health bar</h3>
+        <p>Six regions, each with population and a strategic role. Lose North America and missiles cost more; lose Europe and laser range shrinks; lose East Asia and energy regenerates slower. Lose all six and the harvest is complete.</p>
+        <p>Between missions, pick one of three upgrades. Progress saves in your browser after every mission.</p>
+      </div>
+    </div>
+    <div class="btns"><button id="howBack" class="primary">Back</button></div>
+  </div>
+</div>
+
+<div class="screen" id="briefing">
+  <div class="panel">
+    <div class="eyebrow" id="bHours"></div>
+    <h2 id="bTitle"></h2>
+    <p id="bText" class="brief"></p>
+    <p id="bLost" class="small"></p>
+    <div class="btns"><button id="launchBtn" class="primary">Take Command</button><button class="toTitle">Main Menu</button></div>
+  </div>
+</div>
+
+<div class="screen" id="upgrade">
+  <div class="panel wide">
+    <div class="eyebrow">Between missions · choose one upgrade</div>
+    <h2 id="uTitle"></h2>
+    <div id="uCards" class="cards"></div>
+  </div>
+</div>
+
+<div class="screen" id="pause">
+  <div class="panel">
+    <h2>Paused</h2>
+    <div class="btns"><button id="resumeBtn" class="primary">Resume</button><button id="quitBtn">Save &amp; Quit to Menu</button></div>
+  </div>
+</div>
+
+<div class="screen" id="over">
+  <div class="panel">
+    <div class="eyebrow">Signal lost</div>
+    <h2>Earth Has Fallen</h2>
+    <p id="oText" class="brief"></p>
+    <p id="oScore"></p>
+    <div class="btns"><button id="retryBtn" class="primary">Retry Mission</button><button class="toTitle">Main Menu</button></div>
+  </div>
+</div>
+
+<div class="screen" id="ending">
+  <div class="panel wide">
+    <div class="eyebrow">H+72 · the flagship is broken · the fleet is waiting for your answer</div>
+    <h2>Decide What Humanity Becomes</h2>
+    <div id="eCards" class="cards"></div>
+  </div>
+</div>
+
+<div class="screen" id="victory">
+  <div class="panel">
+    <div class="eyebrow">Campaign complete</div>
+    <h2 id="vTitle"></h2>
+    <p id="vText" class="brief"></p>
+    <p id="vScore"></p>
+    <div class="btns"><button class="toTitle primary">Main Menu</button></div>
+  </div>
+</div>
+
+<script src="game.js"></script>
+</body>
+</html>

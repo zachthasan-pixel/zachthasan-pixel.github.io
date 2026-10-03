@@ -1,0 +1,12 @@
+Earthfall Command: Last Orbit
+Copyright (c) 2026 Zahir Hasan. All rights reserved.
+
+This copy is licensed to you for personal play on the devices you own. You may keep
+backup copies. You may not redistribute, resell, or upload the game files to other
+sites or storefronts.
+
+Third-party software included in game.js:
+  three.js — MIT License — Copyright (c) 2010-2026 three.js authors
+  topojson-client — ISC License — Copyright 2012-2019 Michael Bostock
+  world-atlas (Natural Earth land data) — ISC License — Copyright 2013-2019 Michael Bostock
+  Natural Earth data is in the public domain.
