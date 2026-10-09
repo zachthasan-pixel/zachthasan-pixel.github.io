@@ -1,0 +1,9 @@
+Fonts embedded in style.css
+
+Pixelify Sans — Copyright 2021 The Pixelify Sans Project Authors
+Press Start 2P — Copyright 2012 The Press Start 2P Project Authors
+  (cody@zone38.net), with Reserved Font Name "Press Start 2P".
+
+Both fonts are licensed under the SIL Open Font License, Version 1.1.
+The full license text is available at https://openfontlicense.org
+They are embedded unmodified, as data, and are not sold on their own.

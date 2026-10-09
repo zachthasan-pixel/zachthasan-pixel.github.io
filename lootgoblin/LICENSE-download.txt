@@ -1,0 +1,10 @@
+Infinite Loot Goblin: One-Button Dungeon
+Copyright (c) 2026 Zahir Hasan. All rights reserved.
+
+This copy is licensed to you for personal play on the devices you own. You may keep
+backup copies. You may not redistribute, resell, or upload the game files to other
+sites or storefronts.
+
+All code, pixel art, sound effects and music are original to this game. No third-party
+code libraries are used. The two pixel fonts are included under the SIL Open Font
+License 1.1; see LICENSE-fonts.txt.
