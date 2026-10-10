@@ -21,7 +21,11 @@ function button(r, label, fn, opts) {
   ctx.fillStyle = 'rgba(0,0,0,0.45)'; ctx.fillRect(r.x + 4, r.y + 5, r.w, r.h);
   panel(r.x, r.y, r.w, r.h, dis ? '#2a2238' : hov ? shade(col, 0.2) : col, OUT, 3);
   ctx.fillStyle = 'rgba(255,255,255,0.25)'; ctx.fillRect(r.x + 3, r.y + 3, r.w - 6, 3);
-  txt(label, r.x + r.w / 2, r.y + r.h / 2 + 1, opts.size || LAY.fs * 1.0, dis ? '#7a6f92' : '#2a1640', 'center', false, true);
+  let size = opts.size || LAY.fs * 1.0;
+  ctx.font = tf(size);
+  const tw = ctx.measureText(label).width;
+  if (tw > r.w - 16) size *= (r.w - 16) / tw; // shrink long labels to fit
+  txt(label, r.x + r.w / 2, r.y + r.h / 2 + 1, size, dis ? '#7a6f92' : '#2a1640', 'center', false, true);
   if (!dis) BTN.push({ r, fn });
 }
 
@@ -47,7 +51,7 @@ function drawTitle() {
   lines.forEach((l, i) => txt(l, cx2, H * 0.12 + ts * 2.7 + i * fs * 1.45, fs * 1.0, i === 2 ? '#ff5a76' : '#e8e0ff', 'center', true));
   const bw = Math.min(300, W - 40), bh = Math.round(fs * 2.9);
   let y = Math.max(LAY.scene.h + 10, H * 0.12 + ts * 2.7 + fs * 5.2);
-  button({ x: cx2 - bw / 2, y, w: bw, h: bh }, save.runs ? 'RUN AGAIN' : 'PLAY', () => { AU.sfx('click'); newRun(); }, { size: fs * 1.3 });
+  button({ x: cx2 - bw / 2, y, w: bw, h: bh }, save.runs ? 'RUN AGAIN' : 'PLAY', () => { AU.sfx('click'); startRun(); }, { size: fs * 1.3 });
   y += bh + 12;
   const hw = (bw - 10) / 2;
   button({ x: cx2 - bw / 2, y, w: hw, h: bh * 0.8 }, 'BANK', () => { AU.sfx('click'); game.state = 'bank'; }, { col: '#c46bff', size: fs * 0.9 });
@@ -164,8 +168,18 @@ function drawDead() {
   wrap(tip, w, fs * 0.9, true).forEach((l, i) => txt(l, cx, y + i * fs * 1.2, fs * 0.9, '#7fd7ff', 'center', true));
   y += fs * 3.2;
   const bw = Math.min(300, W - 40), bh = fs * 2.8;
-  button({ x: cx - bw / 2, y: Math.min(y, H - bh * 2 - 30), w: bw, h: bh }, 'RUN AGAIN', () => { AU.sfx('click'); newRun(); }, { size: fs * 1.2 });
-  const hw = (bw - 10) / 2, y2 = Math.min(y, H - bh * 2 - 30) + bh + 12;
+  const canRevive = Portal.hasRewarded && !run.revived;
+  let yb = Math.min(y, H - bh * (canRevive ? 3.1 : 2) - 30);
+  if (canRevive) {
+    if (run.reviveFailed) txt('No video available right now. Sorry!', cx, yb - fs * 0.7, fs * 0.85, '#ff8fa3', 'center', true);
+    button({ x: cx - bw / 2, y: yb, w: bw, h: bh * 0.9 }, 'REVIVE: WATCH AD', () => {
+      AU.sfx('click');
+      Portal.rewarded(ok => { if (ok) revive(); else run.reviveFailed = true; });
+    }, { col: '#4ee0ff', size: fs * 0.95 });
+    yb += bh * 0.9 + 12;
+  }
+  button({ x: cx - bw / 2, y: yb, w: bw, h: bh }, 'RUN AGAIN', () => { AU.sfx('click'); startRun(); }, { size: fs * 1.2 });
+  const hw = (bw - 10) / 2, y2 = yb + bh + 12;
   button({ x: cx - bw / 2, y: y2, w: hw, h: bh * 0.8 }, 'BANK', () => { AU.sfx('click'); game.state = 'bank'; }, { col: '#c46bff', size: fs * 0.9 });
   button({ x: cx - bw / 2 + hw + 10, y: y2, w: hw, h: bh * 0.8 }, 'MENU', () => { AU.sfx('click'); game.state = 'title'; }, { col: '#4ea8ff', size: fs * 0.9 });
 }
@@ -186,7 +200,7 @@ function drawPause() {
   ctx.fillStyle = 'rgba(8,4,16,0.78)'; ctx.fillRect(0, 0, W, H);
   const fs = LAY.fs, bw = Math.min(280, W - 40), bh = fs * 2.7;
   txt('PAUSED', W / 2, H * 0.3, Math.min(fs * 2, W / 9), '#ffe08a', 'center', false, true);
-  button({ x: W / 2 - bw / 2, y: H * 0.42, w: bw, h: bh }, 'RESUME', () => { AU.sfx('click'); game.paused = false; });
+  button({ x: W / 2 - bw / 2, y: H * 0.42, w: bw, h: bh }, 'RESUME', () => { AU.sfx('click'); setPaused(false); });
   button({ x: W / 2 - bw / 2, y: H * 0.42 + bh + 14, w: bw, h: bh }, 'HOW TO PLAY', () => { AU.sfx('click'); game.paused = false; game.state = 'help'; game.wasPlaying = true; }, { col: '#4ea8ff' });
   button({ x: W / 2 - bw / 2, y: H * 0.42 + 2 * (bh + 14), w: bw, h: bh }, 'GIVE UP', () => { AU.sfx('click'); game.paused = false; die('Gave up. The loot wins this time.', false); }, { col: '#ff5a76' });
   muteCorner();
@@ -269,7 +283,7 @@ function render() {
     drawInventory();
     drawFx();
     drawHUD();
-    BTN.push({ r: LAY.pauseBtn, fn: () => { AU.sfx('click'); game.paused = true; } });
+    BTN.push({ r: LAY.pauseBtn, fn: () => { AU.sfx('click'); setPaused(true); } });
     BTN.push({ r: LAY.muteBtn, fn: () => AU.setMuted(!save.muted) });
     if (run.flash > 0) { ctx.globalAlpha = run.flash * 0.6; ctx.fillStyle = run.flashCol; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1; }
     if (!run.dead && !(game.drag && game.drag.moved)) {
@@ -279,6 +293,19 @@ function render() {
     if (game.paused) { BTN = []; drawPause(); }
   }
   cvs.className = game.drag && game.drag.moved ? 'grab' : (BTN.some(b => inRect(ptr.x, ptr.y, b.r)) || (game.state === 'play' && hitSlot(ptr.x, ptr.y) && getItem(hitSlot(ptr.x, ptr.y)))) ? 'point' : '';
+}
+
+// Runs start here so portals get a natural ad break between runs.
+let sessionRuns = 0, starting = false;
+function startRun() {
+  if (starting) return;
+  starting = true;
+  const go = () => { starting = false; newRun(); Portal.gameplayStart(); };
+  if (sessionRuns++ > 0) Portal.midgame(go); else go();
+}
+function setPaused(p) {
+  game.paused = p;
+  if (p) Portal.gameplayStop(); else Portal.gameplayStart();
 }
 
 // ----------------------------------------------------------------- input ---
@@ -304,6 +331,7 @@ function setPtr(e) {
   ptr.touch = e.pointerType === 'touch' || e.pointerType === 'pen';
 }
 cvs.addEventListener('pointerdown', e => {
+  if (Portal.adActive) return;
   setPtr(e); ptr.down = true; AU.init();
   try { cvs.setPointerCapture(e.pointerId); } catch (er) { /* ignore */ }
   if (e.button === 2) return;
@@ -352,15 +380,17 @@ cvs.addEventListener('contextmenu', e => {
   if (ref && getItem(ref)) { sell(ref); if (sameRef(game.sel, ref)) game.sel = null; }
 });
 window.addEventListener('keydown', e => {
+  if ([' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) e.preventDefault();
+  if (Portal.adActive) return;
   AU.init();
   const k = e.key.toLowerCase();
   if (k === 'm') { AU.setMuted(!save.muted); return; }
-  if (game.state === 'title' && (k === 'enter' || k === ' ')) { e.preventDefault(); newRun(); return; }
-  if (game.state === 'dead' && (k === 'enter' || k === ' ' || k === 'r')) { e.preventDefault(); newRun(); return; }
+  if (game.state === 'title' && (k === 'enter' || k === ' ')) { e.preventDefault(); startRun(); return; }
+  if (game.state === 'dead' && (k === 'enter' || k === ' ' || k === 'r')) { e.preventDefault(); startRun(); return; }
   if (game.state === 'help' && (k === 'escape' || k === 'enter')) { game.state = game.wasPlaying ? 'play' : 'title'; if (game.wasPlaying) { game.paused = true; game.wasPlaying = false; } return; }
   if (game.state === 'bank' && k === 'escape') { game.state = run && run.dead ? 'dead' : 'title'; return; }
   if (game.state !== 'play' || !run || run.dead) return;
-  if (k === 'escape' || k === 'p') { game.paused = !game.paused; return; }
+  if (k === 'escape' || k === 'p') { setPaused(!game.paused); return; }
   if (game.paused) return;
   const ref = game.hover || game.sel;
   if (ref && getItem(ref)) {
@@ -370,6 +400,7 @@ window.addEventListener('keydown', e => {
 });
 document.addEventListener('visibilitychange', () => { if (document.hidden && game.state === 'play' && run && !run.dead) game.paused = true; });
 window.addEventListener('resize', resize);
+window.addEventListener('wheel', e => e.preventDefault(), { passive: false });
 window.addEventListener('blur', () => { game.drag = null; });
 
 // ------------------------------------------------------------------ loop ---
@@ -389,5 +420,9 @@ function boot() {
 // Test/screenshot hook (no effect on normal play).
 window.__ilg = { game, get run() { return run; }, newRun, makeGear, makeBomb, makeJunk, makePotion, recompute, save, update, LAY };
 window.__ilgAPI = { sell, useItem, equipFrom, previewEquip, dropOn, unequip, spawnEnemy, spawnBoss };
-const fontsReady = (document.fonts && document.fonts.load) ? Promise.all([document.fonts.load('16px "Pixelify Sans"'), document.fonts.load('16px "Press Start 2P"')]) : Promise.resolve();
-Promise.race([fontsReady, new Promise(r => setTimeout(r, 1500))]).then(boot, boot);
+const wait = ms => new Promise(r => setTimeout(r, ms));
+Promise.race([Portal.init(), wait(3000)]).catch(() => {}).then(() => {
+  Portal.loadingStart();
+  const fontsReady = (document.fonts && document.fonts.load) ? Promise.all([document.fonts.load('16px "Pixelify Sans"'), document.fonts.load('16px "Press Start 2P"')]) : Promise.resolve();
+  return Promise.race([fontsReady, wait(1500)]).catch(() => {});
+}).then(() => { boot(); Portal.loadingStop(); });

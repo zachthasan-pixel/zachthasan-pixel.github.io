@@ -125,6 +125,7 @@ function die(cause, explode) {
   run.hp = Math.min(run.hp, 0);
   run.shake = explode ? 1.4 : 0.6; run.flash = explode ? 1 : 0.4; run.flashCol = explode ? '#fff3c4' : '#ff3b5c';
   run.slow = 0.6;
+  Portal.gameplayStop();
   if (explode) {
     AU.sfx('explode');
     const hx = LAY.hx, hy = LAY.gy - 9 * LAY.P;
@@ -346,12 +347,27 @@ function payJackpot() {
   toast((j.match === 3 ? 'MEGA JACKPOT! ' : j.match === 2 ? 'JACKPOT! ' : 'CONSOLATION PRIZE ') + '+' + fmt(gold) + ' GOLD', '#f2c14e', 2.4);
   for (let i = 0; i < 30; i++) run.fx.push({ x: cx, y: cy, vx: rr(-260, 260), vy: rr(-380, -60), life: 1.2, max: 1.2, coin: true, size: 6, g: 600, home: 0.6 });
   j.paid = true;
+  if (j.match === 3) Portal.happy();
+}
+// Rewarded-ad second chance (portal builds only): back on your feet at 60% HP.
+function revive() {
+  run.dead = false; run.revived = true; run.exploded = false; run.cause = ''; run.deathT = 0;
+  run.hp = run.stats.maxHp * 0.6;
+  if (run.boss) run.nextBoss = run.depth + 40; // the boss comes back for a rematch
+  run.enemies = []; run.boss = null; run.shots = []; run.chests = []; run.flyers = []; run.jackpot = null;
+  for (let i = 0; i < run.cap; i++) if (run.bag[i] && run.bag[i].kind === 'bomb') run.bag[i].fuse = Math.max(run.bag[i].fuse, 6);
+  run.chestT = 3; run.slow = 0; run.flash = 0.5; run.flashCol = '#7fd7ff';
+  run.nextSpawn = run.depth + 10;
+  game.state = 'play'; game.paused = false; game.sel = null;
+  toast('SECOND CHANCE! Try not to blink.', '#7fd7ff', 2.4);
+  AU.sfx('floor');
+  Portal.gameplayStart();
 }
 
 // ---------------------------------------------------------------- update ---
 function update(dt) {
   game.t += dt;
-  if (game.state !== 'play' || game.paused) return;
+  if (game.state !== 'play' || game.paused || Portal.adActive) return;
   if (run.slow > 0) { run.slow -= dt; dt *= 0.35; }
   run.t += dt;
   const s = run.stats;
@@ -540,10 +556,11 @@ function updateFx(dt) {
   if (LAY.goldPulse) LAY.goldPulse = Math.max(0, LAY.goldPulse - dt);
 }
 function endRun() {
-  save.gold += run.gold;
+  save.gold += run.gold - (run.banked || 0); // a revived run only banks the new gold
+  run.banked = run.gold;
   const d = Math.floor(run.depth);
   run.record = d > save.best;
-  if (run.record) save.best = d;
+  if (run.record) { if (save.best > 0) Portal.happy(); save.best = d; }
   if (run.bestItem && (!save.bestItem || run.bestItem.rarity > save.bestItem.r || (run.bestItem.rarity === save.bestItem.r && run.bestItem.level > save.bestItem.l))) {
     save.bestItem = { n: run.bestItem.name, r: run.bestItem.rarity, l: run.bestItem.level };
   }
