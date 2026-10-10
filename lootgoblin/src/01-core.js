@@ -65,7 +65,7 @@ const AU = {
     if (!AC) return;
     try { this.ac = new AC(); } catch (e) { return; }
     this.master = this.ac.createGain();
-    this.master.gain.value = save.muted ? 0 : 0.55;
+    this.master.gain.value = this.targetGain();
     this.master.connect(this.ac.destination);
     this.sfxBus = this.ac.createGain(); this.sfxBus.gain.value = 0.9; this.sfxBus.connect(this.master);
     this.musBus = this.ac.createGain(); this.musBus.gain.value = 0.16; this.musBus.connect(this.master);
@@ -75,10 +75,9 @@ const AU = {
     for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
     this.startMusic();
   },
-  setMuted(m) {
-    save.muted = m; writeSave();
-    if (this.master) this.master.gain.setTargetAtTime(m ? 0 : 0.55, this.ac.currentTime, 0.03);
-  },
+  targetGain() { return save.muted || Portal.adActive || Portal.sdkMute ? 0 : 0.55; },
+  applyGain() { if (this.master) this.master.gain.setTargetAtTime(this.targetGain(), this.ac.currentTime, 0.03); },
+  setMuted(m) { save.muted = m; writeSave(); this.applyGain(); },
   tone(freq, dur, type, vol, slide, delay, bus) {
     if (!this.ac) return;
     const t = this.ac.currentTime + (delay || 0);
@@ -107,7 +106,7 @@ const AU = {
   },
   _last: {},
   sfx(name, arg) {
-    if (!this.ac || save.muted) return;
+    if (!this.ac || save.muted || Portal.adActive) return;
     const now = this.ac.currentTime;
     const gap = { hit: 0.045, crit: 0.05, coin: 0.035, tick: 0.05, hurt: 0.08 }[name] || 0;
     if (gap && this._last[name] && now - this._last[name] < gap) return;

@@ -1,6 +1,78 @@
-/* Infinite Loot Goblin: One-Button Dungeon — (c) 2026 Dr. Zahir Hasan. Built from src/ by build.sh */
+/* Infinite Loot Goblin: One-Button Dungeon — (c) 2026 Dr. Zahir Hasan. Built from src/ by build.sh (web) */
 (function () {
 'use strict';
+// ---------------------------------------------------------------------------
+// Portal layer. build.sh stamps PORTAL as 'web' (itch.io + own site, no ads),
+// 'crazygames' or 'poki'. If a portal SDK is missing (adblock, offline, wrong
+// domain) every call quietly falls through and the game plays normally.
+// ---------------------------------------------------------------------------
+const PORTAL = 'web';
+const Portal = {
+  name: PORTAL, ready: false, playing: false, adActive: false, sdkMute: false,
+  get cg() { return window.CrazyGames && window.CrazyGames.SDK; },
+  get poki() { return window.PokiSDK; },
+  init() {
+    const done = ok => { this.ready = !!ok; };
+    try {
+      if (PORTAL === 'crazygames' && this.cg) {
+        return this.cg.init().then(() => {
+          const env = this.cg.environment;
+          done(env === 'crazygames' || env === 'local');
+          if (!this.ready) return;
+          const apply = s => { this.sdkMute = !!(s && s.muteAudio); AU.applyGain(); };
+          apply(this.cg.game.settings);
+          this.cg.game.addSettingsChangeListener(apply);
+        }).catch(() => done(false));
+      }
+      if (PORTAL === 'poki' && this.poki) {
+        return this.poki.init().then(() => done(true)).catch(() => done(true));
+      }
+    } catch (e) { done(false); }
+    return Promise.resolve();
+  },
+  loadingStart() { this._try(() => { if (PORTAL === 'crazygames') this.cg.game.loadingStart(); }); },
+  loadingStop() {
+    this._try(() => {
+      if (PORTAL === 'crazygames') this.cg.game.loadingStop();
+      if (PORTAL === 'poki') this.poki.gameLoadingFinished();
+    });
+  },
+  gameplayStart() {
+    if (this.playing || this.adActive) return;
+    this.playing = true;
+    this._try(() => { if (PORTAL === 'crazygames') this.cg.game.gameplayStart(); else if (PORTAL === 'poki') this.poki.gameplayStart(); });
+  },
+  gameplayStop() {
+    if (!this.playing) return;
+    this.playing = false;
+    this._try(() => { if (PORTAL === 'crazygames') this.cg.game.gameplayStop(); else if (PORTAL === 'poki') this.poki.gameplayStop(); });
+  },
+  happy() { this._try(() => { if (PORTAL === 'crazygames') this.cg.game.happytime(); }); },
+  get hasRewarded() { return this.ready && PORTAL !== 'web'; },
+  // A break between runs. cb always runs exactly once.
+  midgame(cb) { this._ad('midgame', ok => cb(ok)); },
+  // Opt-in rewarded video. cb(true) only if the ad was actually watched.
+  rewarded(cb) { this._ad('rewarded', cb); },
+  _ad(kind, cb) {
+    if (!this.ready || PORTAL === 'web') { cb(false); return; }
+    let finished = false;
+    const start = () => { this.adActive = true; AU.applyGain(); };
+    const end = ok => {
+      if (finished) return; finished = true;
+      this.adActive = false; AU.applyGain(); cb(ok);
+    };
+    this.gameplayStop();
+    try {
+      if (PORTAL === 'crazygames') {
+        this.cg.ad.requestAd(kind, { adStarted: start, adFinished: () => end(true), adError: () => end(false) });
+      } else {
+        const p = kind === 'rewarded' ? this.poki.rewardedBreak(start) : this.poki.commercialBreak(start);
+        p.then(ok => end(kind === 'rewarded' ? !!ok : true)).catch(() => end(false));
+      }
+    } catch (e) { end(false); }
+  },
+  _try(fn) { if (!this.ready) return; try { fn(); } catch (e) { /* never let a portal break the game */ } },
+};
 // ---------------------------------------------------------------------------
 // Infinite Loot Goblin: One-Button Dungeon — core: canvas, utils, save, audio
 // ---------------------------------------------------------------------------
@@ -68,7 +140,7 @@ const AU = {
     if (!AC) return;
     try { this.ac = new AC(); } catch (e) { return; }
     this.master = this.ac.createGain();
-    this.master.gain.value = save.muted ? 0 : 0.55;
+    this.master.gain.value = this.targetGain();
     this.master.connect(this.ac.destination);
     this.sfxBus = this.ac.createGain(); this.sfxBus.gain.value = 0.9; this.sfxBus.connect(this.master);
     this.musBus = this.ac.createGain(); this.musBus.gain.value = 0.16; this.musBus.connect(this.master);
@@ -78,10 +150,9 @@ const AU = {
     for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
     this.startMusic();
   },
-  setMuted(m) {
-    save.muted = m; writeSave();
-    if (this.master) this.master.gain.setTargetAtTime(m ? 0 : 0.55, this.ac.currentTime, 0.03);
-  },
+  targetGain() { return save.muted || Portal.adActive || Portal.sdkMute ? 0 : 0.55; },
+  applyGain() { if (this.master) this.master.gain.setTargetAtTime(this.targetGain(), this.ac.currentTime, 0.03); },
+  setMuted(m) { save.muted = m; writeSave(); this.applyGain(); },
   tone(freq, dur, type, vol, slide, delay, bus) {
     if (!this.ac) return;
     const t = this.ac.currentTime + (delay || 0);
@@ -110,7 +181,7 @@ const AU = {
   },
   _last: {},
   sfx(name, arg) {
-    if (!this.ac || save.muted) return;
+    if (!this.ac || save.muted || Portal.adActive) return;
     const now = this.ac.currentTime;
     const gap = { hit: 0.045, crit: 0.05, coin: 0.035, tick: 0.05, hurt: 0.08 }[name] || 0;
     if (gap && this._last[name] && now - this._last[name] < gap) return;
@@ -749,6 +820,7 @@ function die(cause, explode) {
   run.hp = Math.min(run.hp, 0);
   run.shake = explode ? 1.4 : 0.6; run.flash = explode ? 1 : 0.4; run.flashCol = explode ? '#fff3c4' : '#ff3b5c';
   run.slow = 0.6;
+  Portal.gameplayStop();
   if (explode) {
     AU.sfx('explode');
     const hx = LAY.hx, hy = LAY.gy - 9 * LAY.P;
@@ -970,12 +1042,27 @@ function payJackpot() {
   toast((j.match === 3 ? 'MEGA JACKPOT! ' : j.match === 2 ? 'JACKPOT! ' : 'CONSOLATION PRIZE ') + '+' + fmt(gold) + ' GOLD', '#f2c14e', 2.4);
   for (let i = 0; i < 30; i++) run.fx.push({ x: cx, y: cy, vx: rr(-260, 260), vy: rr(-380, -60), life: 1.2, max: 1.2, coin: true, size: 6, g: 600, home: 0.6 });
   j.paid = true;
+  if (j.match === 3) Portal.happy();
+}
+// Rewarded-ad second chance (portal builds only): back on your feet at 60% HP.
+function revive() {
+  run.dead = false; run.revived = true; run.exploded = false; run.cause = ''; run.deathT = 0;
+  run.hp = run.stats.maxHp * 0.6;
+  if (run.boss) run.nextBoss = run.depth + 40; // the boss comes back for a rematch
+  run.enemies = []; run.boss = null; run.shots = []; run.chests = []; run.flyers = []; run.jackpot = null;
+  for (let i = 0; i < run.cap; i++) if (run.bag[i] && run.bag[i].kind === 'bomb') run.bag[i].fuse = Math.max(run.bag[i].fuse, 6);
+  run.chestT = 3; run.slow = 0; run.flash = 0.5; run.flashCol = '#7fd7ff';
+  run.nextSpawn = run.depth + 10;
+  game.state = 'play'; game.paused = false; game.sel = null;
+  toast('SECOND CHANCE! Try not to blink.', '#7fd7ff', 2.4);
+  AU.sfx('floor');
+  Portal.gameplayStart();
 }
 
 // ---------------------------------------------------------------- update ---
 function update(dt) {
   game.t += dt;
-  if (game.state !== 'play' || game.paused) return;
+  if (game.state !== 'play' || game.paused || Portal.adActive) return;
   if (run.slow > 0) { run.slow -= dt; dt *= 0.35; }
   run.t += dt;
   const s = run.stats;
@@ -1164,10 +1251,11 @@ function updateFx(dt) {
   if (LAY.goldPulse) LAY.goldPulse = Math.max(0, LAY.goldPulse - dt);
 }
 function endRun() {
-  save.gold += run.gold;
+  save.gold += run.gold - (run.banked || 0); // a revived run only banks the new gold
+  run.banked = run.gold;
   const d = Math.floor(run.depth);
   run.record = d > save.best;
-  if (run.record) save.best = d;
+  if (run.record) { if (save.best > 0) Portal.happy(); save.best = d; }
   if (run.bestItem && (!save.bestItem || run.bestItem.rarity > save.bestItem.r || (run.bestItem.rarity === save.bestItem.r && run.bestItem.level > save.bestItem.l))) {
     save.bestItem = { n: run.bestItem.name, r: run.bestItem.rarity, l: run.bestItem.level };
   }
@@ -1942,7 +2030,11 @@ function button(r, label, fn, opts) {
   ctx.fillStyle = 'rgba(0,0,0,0.45)'; ctx.fillRect(r.x + 4, r.y + 5, r.w, r.h);
   panel(r.x, r.y, r.w, r.h, dis ? '#2a2238' : hov ? shade(col, 0.2) : col, OUT, 3);
   ctx.fillStyle = 'rgba(255,255,255,0.25)'; ctx.fillRect(r.x + 3, r.y + 3, r.w - 6, 3);
-  txt(label, r.x + r.w / 2, r.y + r.h / 2 + 1, opts.size || LAY.fs * 1.0, dis ? '#7a6f92' : '#2a1640', 'center', false, true);
+  let size = opts.size || LAY.fs * 1.0;
+  ctx.font = tf(size);
+  const tw = ctx.measureText(label).width;
+  if (tw > r.w - 16) size *= (r.w - 16) / tw; // shrink long labels to fit
+  txt(label, r.x + r.w / 2, r.y + r.h / 2 + 1, size, dis ? '#7a6f92' : '#2a1640', 'center', false, true);
   if (!dis) BTN.push({ r, fn });
 }
 
@@ -1968,7 +2060,7 @@ function drawTitle() {
   lines.forEach((l, i) => txt(l, cx2, H * 0.12 + ts * 2.7 + i * fs * 1.45, fs * 1.0, i === 2 ? '#ff5a76' : '#e8e0ff', 'center', true));
   const bw = Math.min(300, W - 40), bh = Math.round(fs * 2.9);
   let y = Math.max(LAY.scene.h + 10, H * 0.12 + ts * 2.7 + fs * 5.2);
-  button({ x: cx2 - bw / 2, y, w: bw, h: bh }, save.runs ? 'RUN AGAIN' : 'PLAY', () => { AU.sfx('click'); newRun(); }, { size: fs * 1.3 });
+  button({ x: cx2 - bw / 2, y, w: bw, h: bh }, save.runs ? 'RUN AGAIN' : 'PLAY', () => { AU.sfx('click'); startRun(); }, { size: fs * 1.3 });
   y += bh + 12;
   const hw = (bw - 10) / 2;
   button({ x: cx2 - bw / 2, y, w: hw, h: bh * 0.8 }, 'BANK', () => { AU.sfx('click'); game.state = 'bank'; }, { col: '#c46bff', size: fs * 0.9 });
@@ -2085,8 +2177,18 @@ function drawDead() {
   wrap(tip, w, fs * 0.9, true).forEach((l, i) => txt(l, cx, y + i * fs * 1.2, fs * 0.9, '#7fd7ff', 'center', true));
   y += fs * 3.2;
   const bw = Math.min(300, W - 40), bh = fs * 2.8;
-  button({ x: cx - bw / 2, y: Math.min(y, H - bh * 2 - 30), w: bw, h: bh }, 'RUN AGAIN', () => { AU.sfx('click'); newRun(); }, { size: fs * 1.2 });
-  const hw = (bw - 10) / 2, y2 = Math.min(y, H - bh * 2 - 30) + bh + 12;
+  const canRevive = Portal.hasRewarded && !run.revived;
+  let yb = Math.min(y, H - bh * (canRevive ? 3.1 : 2) - 30);
+  if (canRevive) {
+    if (run.reviveFailed) txt('No video available right now. Sorry!', cx, yb - fs * 0.7, fs * 0.85, '#ff8fa3', 'center', true);
+    button({ x: cx - bw / 2, y: yb, w: bw, h: bh * 0.9 }, 'REVIVE: WATCH AD', () => {
+      AU.sfx('click');
+      Portal.rewarded(ok => { if (ok) revive(); else run.reviveFailed = true; });
+    }, { col: '#4ee0ff', size: fs * 0.95 });
+    yb += bh * 0.9 + 12;
+  }
+  button({ x: cx - bw / 2, y: yb, w: bw, h: bh }, 'RUN AGAIN', () => { AU.sfx('click'); startRun(); }, { size: fs * 1.2 });
+  const hw = (bw - 10) / 2, y2 = yb + bh + 12;
   button({ x: cx - bw / 2, y: y2, w: hw, h: bh * 0.8 }, 'BANK', () => { AU.sfx('click'); game.state = 'bank'; }, { col: '#c46bff', size: fs * 0.9 });
   button({ x: cx - bw / 2 + hw + 10, y: y2, w: hw, h: bh * 0.8 }, 'MENU', () => { AU.sfx('click'); game.state = 'title'; }, { col: '#4ea8ff', size: fs * 0.9 });
 }
@@ -2107,7 +2209,7 @@ function drawPause() {
   ctx.fillStyle = 'rgba(8,4,16,0.78)'; ctx.fillRect(0, 0, W, H);
   const fs = LAY.fs, bw = Math.min(280, W - 40), bh = fs * 2.7;
   txt('PAUSED', W / 2, H * 0.3, Math.min(fs * 2, W / 9), '#ffe08a', 'center', false, true);
-  button({ x: W / 2 - bw / 2, y: H * 0.42, w: bw, h: bh }, 'RESUME', () => { AU.sfx('click'); game.paused = false; });
+  button({ x: W / 2 - bw / 2, y: H * 0.42, w: bw, h: bh }, 'RESUME', () => { AU.sfx('click'); setPaused(false); });
   button({ x: W / 2 - bw / 2, y: H * 0.42 + bh + 14, w: bw, h: bh }, 'HOW TO PLAY', () => { AU.sfx('click'); game.paused = false; game.state = 'help'; game.wasPlaying = true; }, { col: '#4ea8ff' });
   button({ x: W / 2 - bw / 2, y: H * 0.42 + 2 * (bh + 14), w: bw, h: bh }, 'GIVE UP', () => { AU.sfx('click'); game.paused = false; die('Gave up. The loot wins this time.', false); }, { col: '#ff5a76' });
   muteCorner();
@@ -2190,7 +2292,7 @@ function render() {
     drawInventory();
     drawFx();
     drawHUD();
-    BTN.push({ r: LAY.pauseBtn, fn: () => { AU.sfx('click'); game.paused = true; } });
+    BTN.push({ r: LAY.pauseBtn, fn: () => { AU.sfx('click'); setPaused(true); } });
     BTN.push({ r: LAY.muteBtn, fn: () => AU.setMuted(!save.muted) });
     if (run.flash > 0) { ctx.globalAlpha = run.flash * 0.6; ctx.fillStyle = run.flashCol; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1; }
     if (!run.dead && !(game.drag && game.drag.moved)) {
@@ -2200,6 +2302,19 @@ function render() {
     if (game.paused) { BTN = []; drawPause(); }
   }
   cvs.className = game.drag && game.drag.moved ? 'grab' : (BTN.some(b => inRect(ptr.x, ptr.y, b.r)) || (game.state === 'play' && hitSlot(ptr.x, ptr.y) && getItem(hitSlot(ptr.x, ptr.y)))) ? 'point' : '';
+}
+
+// Runs start here so portals get a natural ad break between runs.
+let sessionRuns = 0, starting = false;
+function startRun() {
+  if (starting) return;
+  starting = true;
+  const go = () => { starting = false; newRun(); Portal.gameplayStart(); };
+  if (sessionRuns++ > 0) Portal.midgame(go); else go();
+}
+function setPaused(p) {
+  game.paused = p;
+  if (p) Portal.gameplayStop(); else Portal.gameplayStart();
 }
 
 // ----------------------------------------------------------------- input ---
@@ -2225,6 +2340,7 @@ function setPtr(e) {
   ptr.touch = e.pointerType === 'touch' || e.pointerType === 'pen';
 }
 cvs.addEventListener('pointerdown', e => {
+  if (Portal.adActive) return;
   setPtr(e); ptr.down = true; AU.init();
   try { cvs.setPointerCapture(e.pointerId); } catch (er) { /* ignore */ }
   if (e.button === 2) return;
@@ -2273,15 +2389,17 @@ cvs.addEventListener('contextmenu', e => {
   if (ref && getItem(ref)) { sell(ref); if (sameRef(game.sel, ref)) game.sel = null; }
 });
 window.addEventListener('keydown', e => {
+  if ([' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) e.preventDefault();
+  if (Portal.adActive) return;
   AU.init();
   const k = e.key.toLowerCase();
   if (k === 'm') { AU.setMuted(!save.muted); return; }
-  if (game.state === 'title' && (k === 'enter' || k === ' ')) { e.preventDefault(); newRun(); return; }
-  if (game.state === 'dead' && (k === 'enter' || k === ' ' || k === 'r')) { e.preventDefault(); newRun(); return; }
+  if (game.state === 'title' && (k === 'enter' || k === ' ')) { e.preventDefault(); startRun(); return; }
+  if (game.state === 'dead' && (k === 'enter' || k === ' ' || k === 'r')) { e.preventDefault(); startRun(); return; }
   if (game.state === 'help' && (k === 'escape' || k === 'enter')) { game.state = game.wasPlaying ? 'play' : 'title'; if (game.wasPlaying) { game.paused = true; game.wasPlaying = false; } return; }
   if (game.state === 'bank' && k === 'escape') { game.state = run && run.dead ? 'dead' : 'title'; return; }
   if (game.state !== 'play' || !run || run.dead) return;
-  if (k === 'escape' || k === 'p') { game.paused = !game.paused; return; }
+  if (k === 'escape' || k === 'p') { setPaused(!game.paused); return; }
   if (game.paused) return;
   const ref = game.hover || game.sel;
   if (ref && getItem(ref)) {
@@ -2291,6 +2409,7 @@ window.addEventListener('keydown', e => {
 });
 document.addEventListener('visibilitychange', () => { if (document.hidden && game.state === 'play' && run && !run.dead) game.paused = true; });
 window.addEventListener('resize', resize);
+window.addEventListener('wheel', e => e.preventDefault(), { passive: false });
 window.addEventListener('blur', () => { game.drag = null; });
 
 // ------------------------------------------------------------------ loop ---
@@ -2310,6 +2429,10 @@ function boot() {
 // Test/screenshot hook (no effect on normal play).
 window.__ilg = { game, get run() { return run; }, newRun, makeGear, makeBomb, makeJunk, makePotion, recompute, save, update, LAY };
 window.__ilgAPI = { sell, useItem, equipFrom, previewEquip, dropOn, unequip, spawnEnemy, spawnBoss };
-const fontsReady = (document.fonts && document.fonts.load) ? Promise.all([document.fonts.load('16px "Pixelify Sans"'), document.fonts.load('16px "Press Start 2P"')]) : Promise.resolve();
-Promise.race([fontsReady, new Promise(r => setTimeout(r, 1500))]).then(boot, boot);
+const wait = ms => new Promise(r => setTimeout(r, ms));
+Promise.race([Portal.init(), wait(3000)]).catch(() => {}).then(() => {
+  Portal.loadingStart();
+  const fontsReady = (document.fonts && document.fonts.load) ? Promise.all([document.fonts.load('16px "Pixelify Sans"'), document.fonts.load('16px "Press Start 2P"')]) : Promise.resolve();
+  return Promise.race([fontsReady, wait(1500)]).catch(() => {});
+}).then(() => { boot(); Portal.loadingStop(); });
 })();

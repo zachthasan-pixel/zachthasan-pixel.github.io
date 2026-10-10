@@ -12,7 +12,8 @@ Files in this folder:
 | `cover-630x500.jpg` | Cover image, rendered by the game engine itself | Project page → Cover image |
 | `screenshots/*.png` | Four 1280×720 gameplay shots and one phone shot | Project page → Screenshots |
 | `index.html`, `game.js`, `style.css`, `favicon.svg` | The live copy served at `https://drzahirhasan.com/lootgoblin/` | Nothing to upload. This is the web mirror. |
-| `src/`, `build.sh` | Source code. `./build.sh` rebuilds `game.js` and both zips | Keep in the repo only |
+| `lootgoblin-crazygames.zip`, `lootgoblin-poki.zip` | Ad-supported builds for the other portals | **Not for itch.io**; see `PORTAL-SUBMISSION-GUIDE.md` |
+| `src/`, `build.sh` | Source code. `./build.sh` rebuilds `game.js` and all four zips | Keep in the repo only |
 
 There is no build tool to install: `build.sh` only needs `bash`, `zip` and (for its syntax check) `node`.
 
@@ -117,16 +118,13 @@ Spares if any are rejected: `inventory`, `funny`, `html5`, `browser`.
 | Phase | Setting | Notes |
 |---|---|---|
 | Launch | **$0 or donate**, suggested **$1.00** | Short-session arcade games spread through free play. Gather ratings and comments. |
-| Wider reach | **CrazyGames / Poki** submission (see §8) | Their audience matches the game; revenue comes from ad share. |
+| Wider reach | **CrazyGames / Poki** submission (see `PORTAL-SUBMISSION-GUIDE.md`) | Their audience matches the game; revenue comes from ad share. |
 | Later | **Paid "Deluxe" offline edition, $2.99** | Add more legendaries, a 4th boss and an endless "Casino" mode, and keep the browser version free. |
 
-## 8. CrazyGames (next step, not done yet)
+## 8. CrazyGames and Poki
 
-CrazyGames accepts HTML5 uploads at <https://developer.crazygames.com>. Before it can earn ad revenue there it needs
-**CrazyGames SDK v3** wired in: call `gameplayStart()` when a run starts, `gameplayStop()` on pause, game-over and the
-menus, and optionally offer a rewarded ad (for example "watch an ad to keep your loot after exploding"). That is a
-small, separate code change. Ask me when you want it, and I'll make it as its own build so the itch.io version stays
-ad-free.
+Done as separate builds, so the itch.io version stays ad-free. See `PORTAL-SUBMISSION-GUIDE.md`, and upload
+`lootgoblin-crazygames.zip` to CrazyGames and `lootgoblin-poki.zip` to Poki. **Never upload those two zips to itch.io.**
 
 ## 9. Pre-publish checklist
 
