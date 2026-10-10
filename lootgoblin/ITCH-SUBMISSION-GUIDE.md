@@ -11,7 +11,7 @@ Files in this folder:
 | `lootgoblin-download.zip` | The same game for offline play, plus `README.txt`, `LICENSE.txt` and `LICENSE-fonts.txt` | Uploads → a second file, kind **Windows / macOS / Linux** |
 | `cover-630x500.jpg` | Cover image, rendered by the game engine itself | Project page → Cover image |
 | `screenshots/*.png` | Four 1280×720 gameplay shots and one phone shot | Project page → Screenshots |
-| `index.html`, `game.js`, `style.css`, `favicon.svg` | The live copy served at `https://zahirhasan.com/lootgoblin/` | Nothing to upload. This is the web mirror. |
+| `index.html`, `game.js`, `style.css`, `favicon.svg` | The live copy served at `https://drzahirhasan.com/lootgoblin/` | Nothing to upload. This is the web mirror. |
 | `src/`, `build.sh` | Source code. `./build.sh` rebuilds `game.js` and both zips | Keep in the repo only |
 
 There is no build tool to install: `build.sh` only needs `bash`, `zip` and (for its syntax check) `node`.
