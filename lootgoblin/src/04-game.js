@@ -80,6 +80,7 @@ function newRun() {
     jackpot: null, banner: null, toasts: [], hint: null, hintsDone: {}, bossAbilityT: 4,
   };
   for (const k of SLOTS) run.gear[k] = null;
+  run.cap = clamp(6 + save.up.bag, 2, MAXBAG);
   recompute(true);
   run.hp = run.stats.maxHp;
   game.sel = null; game.hover = null; game.paused = false;
@@ -335,13 +336,14 @@ function startJackpot() {
   const match = res[0] === res[1] && res[1] === res[2] ? 3 : (res[0] === res[1] || res[1] === res[2] || res[0] === res[2]) ? 2 : 1;
   run.jackpot = { t: 0, res, match, paid: false };
 }
-function payJackpot() {
+function payJackpot(onlyWhatFits) {
   const j = run.jackpot, L = run.level + 2, cx = LAY.scene.w / 2, cy = LAY.scene.h * 0.42;
   const items = [];
   if (j.match === 3) items.push(makeGear(pick(SLOTS), R_LEG, L), makeGear(pick(SLOTS), R_LEG, L));
   else if (j.match === 2) items.push(makeGear(pick(SLOTS), R_LEG, L));
   else items.push(makeGear(pick(SLOTS), 3, L));
-  items.forEach((it, i) => sendToBag(it, cx, cy, i * 0.3));
+  let room = 0; for (let i = 0; i < run.cap; i++) if (!run.bag[i]) room++;
+  (onlyWhatFits ? items.slice(0, room) : items).forEach((it, i) => sendToBag(it, cx, cy, i * 0.3));
   const gold = Math.round(30 * goldScale(run.level) * [1, 1, 2, 5][j.match]);
   run.gold += gold;
   toast((j.match === 3 ? 'MEGA JACKPOT! ' : j.match === 2 ? 'JACKPOT! ' : 'CONSOLATION PRIZE ') + '+' + fmt(gold) + ' GOLD', '#f2c14e', 2.4);
@@ -349,12 +351,21 @@ function payJackpot() {
   j.paid = true;
   if (j.match === 3) Portal.happy();
 }
+function finishJackpot() {
+  run.jackpot = null; run.floor++;
+  const th = THEMES[run.floor % THEMES.length];
+  showBanner(th.name, 'Floor ' + (run.floor + 1) + ' · Depth ' + Math.floor(run.depth) + ' m');
+  AU.sfx('floor');
+  run.nextSpawn = run.depth + 12;
+}
 // Rewarded-ad second chance (portal builds only): back on your feet at 60% HP.
 function revive() {
   run.dead = false; run.revived = true; run.exploded = false; run.cause = ''; run.deathT = 0;
   run.hp = run.stats.maxHp * 0.6;
   if (run.boss) run.nextBoss = run.depth + 40; // the boss comes back for a rematch
-  run.enemies = []; run.boss = null; run.shots = []; run.chests = []; run.flyers = []; run.jackpot = null;
+  run.enemies = []; run.boss = null; run.shots = []; run.chests = []; run.flyers = [];
+  if (run.jackpot) { if (!run.jackpot.paid) payJackpot(true); finishJackpot(); }
+  run._tip = null; run.reviveFailed = false;
   for (let i = 0; i < run.cap; i++) if (run.bag[i] && run.bag[i].kind === 'bomb') run.bag[i].fuse = Math.max(run.bag[i].fuse, 6);
   run.chestT = 3; run.slow = 0; run.flash = 0.5; run.flashCol = '#7fd7ff';
   run.nextSpawn = run.depth + 10;
@@ -525,13 +536,7 @@ function update(dt) {
     const j = run.jackpot; j.t += dt;
     if (j.t < 1.9 && Math.floor(j.t * 18) !== Math.floor((j.t - dt) * 18)) AU.sfx('reel');
     if (j.t > 2.0 && !j.paid) { payJackpot(); AU.sfx('jackpot'); }
-    if (j.t > 3.2) {
-      run.jackpot = null; run.floor++;
-      const th = THEMES[run.floor % THEMES.length];
-      showBanner(th.name, 'Floor ' + (run.floor + 1) + ' · Depth ' + Math.floor(run.depth) + ' m');
-      AU.sfx('floor');
-      run.nextSpawn = run.depth + 12;
-    }
+    if (j.t > 3.2) finishJackpot();
   }
   tutorialUpdate();
 }
@@ -556,7 +561,9 @@ function updateFx(dt) {
   if (LAY.goldPulse) LAY.goldPulse = Math.max(0, LAY.goldPulse - dt);
 }
 function endRun() {
-  save.gold += run.gold - (run.banked || 0); // a revived run only banks the new gold
+  Portal.gameplayStop();
+  run.lastBanked = run.gold - (run.banked || 0); // a revived run only banks the new gold
+  save.gold += run.lastBanked;
   run.banked = run.gold;
   const d = Math.floor(run.depth);
   run.record = d > save.best;

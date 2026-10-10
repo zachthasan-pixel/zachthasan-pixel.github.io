@@ -53,15 +53,19 @@ const Portal = {
   midgame(cb) { this._ad('midgame', ok => cb(ok)); },
   // Opt-in rewarded video. cb(true) only if the ad was actually watched.
   rewarded(cb) { this._ad('rewarded', cb); },
+  pending: false,
   _ad(kind, cb) {
     if (!this.ready || PORTAL === 'web') { cb(false); return; }
     let finished = false;
+    this.pending = true;
     const start = () => { this.adActive = true; AU.applyGain(); };
     const end = ok => {
       if (finished) return; finished = true;
-      this.adActive = false; AU.applyGain(); cb(ok);
+      this.adActive = false; this.pending = false; AU.applyGain(); cb(ok);
     };
     this.gameplayStop();
+    // If the SDK never answers, don't leave the game frozen.
+    setTimeout(() => { if (!this.adActive) end(false); }, 8000);
     try {
       if (PORTAL === 'crazygames') {
         this.cg.ad.requestAd(kind, { adStarted: start, adFinished: () => end(true), adError: () => end(false) });
@@ -775,6 +779,7 @@ function newRun() {
     jackpot: null, banner: null, toasts: [], hint: null, hintsDone: {}, bossAbilityT: 4,
   };
   for (const k of SLOTS) run.gear[k] = null;
+  run.cap = clamp(6 + save.up.bag, 2, MAXBAG);
   recompute(true);
   run.hp = run.stats.maxHp;
   game.sel = null; game.hover = null; game.paused = false;
@@ -1030,13 +1035,14 @@ function startJackpot() {
   const match = res[0] === res[1] && res[1] === res[2] ? 3 : (res[0] === res[1] || res[1] === res[2] || res[0] === res[2]) ? 2 : 1;
   run.jackpot = { t: 0, res, match, paid: false };
 }
-function payJackpot() {
+function payJackpot(onlyWhatFits) {
   const j = run.jackpot, L = run.level + 2, cx = LAY.scene.w / 2, cy = LAY.scene.h * 0.42;
   const items = [];
   if (j.match === 3) items.push(makeGear(pick(SLOTS), R_LEG, L), makeGear(pick(SLOTS), R_LEG, L));
   else if (j.match === 2) items.push(makeGear(pick(SLOTS), R_LEG, L));
   else items.push(makeGear(pick(SLOTS), 3, L));
-  items.forEach((it, i) => sendToBag(it, cx, cy, i * 0.3));
+  let room = 0; for (let i = 0; i < run.cap; i++) if (!run.bag[i]) room++;
+  (onlyWhatFits ? items.slice(0, room) : items).forEach((it, i) => sendToBag(it, cx, cy, i * 0.3));
   const gold = Math.round(30 * goldScale(run.level) * [1, 1, 2, 5][j.match]);
   run.gold += gold;
   toast((j.match === 3 ? 'MEGA JACKPOT! ' : j.match === 2 ? 'JACKPOT! ' : 'CONSOLATION PRIZE ') + '+' + fmt(gold) + ' GOLD', '#f2c14e', 2.4);
@@ -1044,12 +1050,21 @@ function payJackpot() {
   j.paid = true;
   if (j.match === 3) Portal.happy();
 }
+function finishJackpot() {
+  run.jackpot = null; run.floor++;
+  const th = THEMES[run.floor % THEMES.length];
+  showBanner(th.name, 'Floor ' + (run.floor + 1) + ' · Depth ' + Math.floor(run.depth) + ' m');
+  AU.sfx('floor');
+  run.nextSpawn = run.depth + 12;
+}
 // Rewarded-ad second chance (portal builds only): back on your feet at 60% HP.
 function revive() {
   run.dead = false; run.revived = true; run.exploded = false; run.cause = ''; run.deathT = 0;
   run.hp = run.stats.maxHp * 0.6;
   if (run.boss) run.nextBoss = run.depth + 40; // the boss comes back for a rematch
-  run.enemies = []; run.boss = null; run.shots = []; run.chests = []; run.flyers = []; run.jackpot = null;
+  run.enemies = []; run.boss = null; run.shots = []; run.chests = []; run.flyers = [];
+  if (run.jackpot) { if (!run.jackpot.paid) payJackpot(true); finishJackpot(); }
+  run._tip = null; run.reviveFailed = false;
   for (let i = 0; i < run.cap; i++) if (run.bag[i] && run.bag[i].kind === 'bomb') run.bag[i].fuse = Math.max(run.bag[i].fuse, 6);
   run.chestT = 3; run.slow = 0; run.flash = 0.5; run.flashCol = '#7fd7ff';
   run.nextSpawn = run.depth + 10;
@@ -1220,13 +1235,7 @@ function update(dt) {
     const j = run.jackpot; j.t += dt;
     if (j.t < 1.9 && Math.floor(j.t * 18) !== Math.floor((j.t - dt) * 18)) AU.sfx('reel');
     if (j.t > 2.0 && !j.paid) { payJackpot(); AU.sfx('jackpot'); }
-    if (j.t > 3.2) {
-      run.jackpot = null; run.floor++;
-      const th = THEMES[run.floor % THEMES.length];
-      showBanner(th.name, 'Floor ' + (run.floor + 1) + ' · Depth ' + Math.floor(run.depth) + ' m');
-      AU.sfx('floor');
-      run.nextSpawn = run.depth + 12;
-    }
+    if (j.t > 3.2) finishJackpot();
   }
   tutorialUpdate();
 }
@@ -1251,7 +1260,9 @@ function updateFx(dt) {
   if (LAY.goldPulse) LAY.goldPulse = Math.max(0, LAY.goldPulse - dt);
 }
 function endRun() {
-  save.gold += run.gold - (run.banked || 0); // a revived run only banks the new gold
+  Portal.gameplayStop();
+  run.lastBanked = run.gold - (run.banked || 0); // a revived run only banks the new gold
+  save.gold += run.lastBanked;
   run.banked = run.gold;
   const d = Math.floor(run.depth);
   run.record = d > save.best;
@@ -1665,6 +1676,13 @@ function drawWorld() {
 }
 
 function drawFx() {
+  const free = freeSlot(), tr = free >= 0 ? LAY.bag[free] : LAY.bagRect;
+  for (const fl of run.flyers) {
+    if (fl.t < 0) continue;
+    const k = ease(clamp(fl.t / fl.dur, 0, 1));
+    const x = lerp(fl.x, tr.x + tr.w / 2, k), y = lerp(fl.y, tr.y + tr.h / 2, k) - Math.sin(k * Math.PI) * LAY.S;
+    drawItemIcon(fl.item, x, y, LAY.S * (0.6 + 0.3 * k));
+  }
   for (const p of run.fx) {
     const a = clamp(p.life / (p.max * 0.5), 0, 1);
     if (p.coin) {
@@ -1843,7 +1861,7 @@ function drawInventory() {
   ctx.fillStyle = '#0b0714'; ctx.fillRect(0, LAY.scene.h, W, H - LAY.scene.h);
   ctx.fillStyle = '#2a1d45'; ctx.fillRect(0, LAY.scene.h, W, 3);
   const drag = game.drag && game.drag.moved ? game.drag : null;
-  const dragIt = drag ? getItem(drag.src) : null;
+  const dragIt = drag && getItem(drag.src) === drag.item ? drag.item : null;
   const selIt = game.sel ? getItem(game.sel) : null;
   const active = dragIt || selIt;
   // GEAR
@@ -1913,7 +1931,7 @@ function drawInventory() {
     if (active) txt('+' + fmt(sellValue(active, run)) + 'g', sr.x + sr.w / 2, sr.y + sr.h * 0.84, fs * 0.9, '#ffe08a', 'center', true);
   }
   // hint
-  if (run.hint && !drag) drawHint(run.hint);
+  if (run.hint && !drag && !run.dead) drawHint(run.hint);
   // dragged item follows the pointer
   if (dragIt) {
     drawItemIcon(dragIt, ptr.x, ptr.y - (ptr.touch ? S * 0.6 : 0), S * 0.95);
@@ -2067,7 +2085,7 @@ function drawTitle() {
   button({ x: cx2 - bw / 2, y, w: bw, h: bh }, save.runs ? 'RUN AGAIN' : 'PLAY', () => { AU.sfx('click'); startRun(); }, { size: fs * 1.3 });
   y += bh + 12;
   const hw = (bw - 10) / 2;
-  button({ x: cx2 - bw / 2, y, w: hw, h: bh * 0.8 }, 'BANK', () => { AU.sfx('click'); game.state = 'bank'; }, { col: '#c46bff', size: fs * 0.9 });
+  button({ x: cx2 - bw / 2, y, w: hw, h: bh * 0.8 }, 'BANK', () => { AU.sfx('click'); game.bankFrom = game.state; game.state = 'bank'; }, { col: '#c46bff', size: fs * 0.9 });
   button({ x: cx2 - bw / 2 + hw + 10, y, w: hw, h: bh * 0.8 }, 'HOW TO', () => { AU.sfx('click'); game.state = 'help'; }, { col: '#4ea8ff', size: fs * 0.9 });
   y += bh * 0.8 + 18;
   const info = 'Best ' + save.best + ' m  ·  Gold ' + fmt(save.gold) + (save.bestItem ? '  ·  Best find: ' + save.bestItem.n : '');
@@ -2113,7 +2131,7 @@ function drawHelp() {
   const bw = Math.min(260, W - 40);
   button({ x: W / 2 - bw / 2, y: Math.min(H - fs * 3.6, y + fs * 1.8), w: bw, h: fs * 2.6 }, 'GOT IT', () => {
     AU.sfx('click');
-    if (game.wasPlaying && run && !run.dead) { game.state = 'play'; game.paused = true; } else game.state = 'title';
+    if (game.wasPlaying && run) { game.state = 'play'; game.paused = !run.dead; } else game.state = 'title';
     game.wasPlaying = false;
   });
 }
@@ -2144,7 +2162,7 @@ function drawBank() {
   });
   const rows = Math.ceil(UPG.length / cols);
   const bw = Math.min(260, W - 40);
-  button({ x: W / 2 - bw / 2, y: Math.min(H - fs * 3.4, y0 + rows * (ch + 12) + 8), w: bw, h: fs * 2.5 }, 'BACK', () => { AU.sfx('click'); game.state = run && run.dead ? 'dead' : 'title'; });
+  button({ x: W / 2 - bw / 2, y: Math.min(H - fs * 3.4, y0 + rows * (ch + 12) + 8), w: bw, h: fs * 2.5 }, 'BACK', () => { AU.sfx('click'); game.state = game.bankFrom || 'title'; });
 }
 
 // -------------------------------------------------------------- results ----
@@ -2162,7 +2180,7 @@ function drawDead() {
     ['DEPTH', Math.floor(run.depth) + ' m' + (run.record ? '  NEW BEST!' : ''), run.record ? '#ffe08a' : '#fff'],
     ['LOOT OPENED', String(run.opened), '#fff'],
     ['ENEMIES SLAIN', String(run.kills), '#fff'],
-    ['GOLD BANKED', '+' + fmt(run.gold), '#f2c14e'],
+    ['GOLD BANKED', '+' + fmt(run.lastBanked || 0), '#f2c14e'],
   ];
   const w = Math.min(380, W - 40);
   for (const [a, b, c] of rows) {
@@ -2187,13 +2205,14 @@ function drawDead() {
     if (run.reviveFailed) txt('No video available right now. Sorry!', cx, yb - fs * 0.7, fs * 0.85, '#ff8fa3', 'center', true);
     button({ x: cx - bw / 2, y: yb, w: bw, h: bh * 0.9 }, 'REVIVE: WATCH AD', () => {
       AU.sfx('click');
-      Portal.rewarded(ok => { if (ok) revive(); else run.reviveFailed = true; });
+      const r = run;
+      Portal.rewarded(ok => { if (run !== r || game.state !== 'dead' || !r.dead) return; if (ok) revive(); else r.reviveFailed = true; });
     }, { col: '#4ee0ff', size: fs * 0.95 });
     yb += bh * 0.9 + 12;
   }
   button({ x: cx - bw / 2, y: yb, w: bw, h: bh }, 'RUN AGAIN', () => { AU.sfx('click'); startRun(); }, { size: fs * 1.2 });
   const hw = (bw - 10) / 2, y2 = yb + bh + 12;
-  button({ x: cx - bw / 2, y: y2, w: hw, h: bh * 0.8 }, 'BANK', () => { AU.sfx('click'); game.state = 'bank'; }, { col: '#c46bff', size: fs * 0.9 });
+  button({ x: cx - bw / 2, y: y2, w: hw, h: bh * 0.8 }, 'BANK', () => { AU.sfx('click'); game.bankFrom = game.state; game.state = 'bank'; }, { col: '#c46bff', size: fs * 0.9 });
   button({ x: cx - bw / 2 + hw + 10, y: y2, w: hw, h: bh * 0.8 }, 'MENU', () => { AU.sfx('click'); game.state = 'title'; }, { col: '#4ea8ff', size: fs * 0.9 });
 }
 function deathTip() {
@@ -2286,6 +2305,7 @@ function render() {
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   ctx.imageSmoothingEnabled = false;
   BTN = [];
+  if (game.sel && !selValid()) game.sel = null;
   if (game.state === 'cover') drawCover();
   else if (game.state === 'title') drawTitle();
   else if (game.state === 'help') drawHelp();
@@ -2296,7 +2316,7 @@ function render() {
     drawInventory();
     drawFx();
     drawHUD();
-    BTN.push({ r: LAY.pauseBtn, fn: () => { AU.sfx('click'); setPaused(true); } });
+    if (!run.dead) BTN.push({ r: LAY.pauseBtn, fn: () => { AU.sfx('click'); setPaused(true); } });
     BTN.push({ r: LAY.muteBtn, fn: () => AU.setMuted(!save.muted) });
     if (run.flash > 0) { ctx.globalAlpha = run.flash * 0.6; ctx.fillStyle = run.flashCol; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1; }
     if (!run.dead && !(game.drag && game.drag.moved)) {
@@ -2317,6 +2337,7 @@ function startRun() {
   if (sessionRuns++ > 0) Portal.midgame(go); else go();
 }
 function setPaused(p) {
+  if (!run || run.dead) { game.paused = false; return; }
   game.paused = p;
   if (p) Portal.gameplayStop(); else Portal.gameplayStart();
 }
@@ -2337,6 +2358,8 @@ function hitTarget(x, y) {
   if (inRect(x, y, LAY.scene)) return { k: 'scene' };
   return null;
 }
+// A selection is only good while the same item still sits in that slot.
+function selValid() { return !!(game.sel && run && getItem(game.sel) === game.sel.item); }
 const sameRef = (a, b) => a && b && a.k === b.k && a.i === b.i && a.s === b.s;
 function setPtr(e) {
   const r = cvs.getBoundingClientRect();
@@ -2344,7 +2367,7 @@ function setPtr(e) {
   ptr.touch = e.pointerType === 'touch' || e.pointerType === 'pen';
 }
 cvs.addEventListener('pointerdown', e => {
-  if (Portal.adActive) return;
+  if (Portal.adActive || Portal.pending) return;
   setPtr(e); ptr.down = true; AU.init();
   try { cvs.setPointerCapture(e.pointerId); } catch (er) { /* ignore */ }
   if (e.button === 2) return;
@@ -2354,7 +2377,7 @@ cvs.addEventListener('pointerdown', e => {
   if (ref && getItem(ref)) { game.drag = { src: ref, item: getItem(ref), x0: ptr.x, y0: ptr.y, moved: false }; return; }
   if (game.sel) {
     const tgt = hitTarget(ptr.x, ptr.y);
-    if (tgt && getItem(game.sel)) dropOn(game.sel, tgt);
+    if (tgt && selValid()) dropOn(game.sel, tgt);
     game.sel = null;
   }
 });
@@ -2365,21 +2388,21 @@ cvs.addEventListener('pointermove', e => {
 });
 function endDrag() {
   const d = game.drag; game.drag = null;
-  if (!d || game.state !== 'play' || !run || run.dead) return;
+  if (!d || game.state !== 'play' || !run || run.dead || game.paused) return;
   if (getItem(d.src) !== d.item) return; // it blew up or moved while we held it
   if (d.moved) {
-    const tgt = hitTarget(ptr.x, ptr.y - (ptr.touch ? LAY.S * 0.6 : 0)) || hitTarget(ptr.x, ptr.y);
+    const tgt = hitTarget(ptr.x, ptr.y);
     dropOn(d.src, tgt);
     return;
   }
   const now = performance.now();
-  if (game.lastTap && sameRef(game.lastTap.ref, d.src) && now - game.lastTap.t < 380) {
+  if (game.lastTap && sameRef(game.lastTap.ref, d.src) && game.lastTap.item === d.item && now - game.lastTap.t < 380) {
     useItem(d.src); game.sel = null; game.lastTap = null;
-  } else if (game.sel && !sameRef(game.sel, d.src)) {
+  } else if (selValid() && !sameRef(game.sel, d.src)) {
     dropOn(game.sel, d.src); game.sel = null; game.lastTap = null;
   } else {
-    game.sel = sameRef(game.sel, d.src) ? null : d.src;
-    game.lastTap = { ref: d.src, t: now };
+    game.sel = selValid() && sameRef(game.sel, d.src) ? null : Object.assign({ item: d.item }, d.src);
+    game.lastTap = { ref: d.src, item: d.item, t: now };
   }
 }
 cvs.addEventListener('pointerup', e => { setPtr(e); ptr.down = false; endDrag(); if (ptr.touch) game.hover = null; });
@@ -2394,14 +2417,14 @@ cvs.addEventListener('contextmenu', e => {
 });
 window.addEventListener('keydown', e => {
   if ([' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) e.preventDefault();
-  if (Portal.adActive) return;
+  if (Portal.adActive || Portal.pending) return;
   AU.init();
   const k = e.key.toLowerCase();
   if (k === 'm') { AU.setMuted(!save.muted); return; }
   if (game.state === 'title' && (k === 'enter' || k === ' ')) { e.preventDefault(); startRun(); return; }
   if (game.state === 'dead' && (k === 'enter' || k === ' ' || k === 'r')) { e.preventDefault(); startRun(); return; }
   if (game.state === 'help' && (k === 'escape' || k === 'enter')) { game.state = game.wasPlaying ? 'play' : 'title'; if (game.wasPlaying) { game.paused = true; game.wasPlaying = false; } return; }
-  if (game.state === 'bank' && k === 'escape') { game.state = run && run.dead ? 'dead' : 'title'; return; }
+  if (game.state === 'bank' && k === 'escape') { game.state = game.bankFrom || 'title'; return; }
   if (game.state !== 'play' || !run || run.dead) return;
   if (k === 'escape' || k === 'p') { setPaused(!game.paused); return; }
   if (game.paused) return;

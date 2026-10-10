@@ -50,15 +50,19 @@ const Portal = {
   midgame(cb) { this._ad('midgame', ok => cb(ok)); },
   // Opt-in rewarded video. cb(true) only if the ad was actually watched.
   rewarded(cb) { this._ad('rewarded', cb); },
+  pending: false,
   _ad(kind, cb) {
     if (!this.ready || PORTAL === 'web') { cb(false); return; }
     let finished = false;
+    this.pending = true;
     const start = () => { this.adActive = true; AU.applyGain(); };
     const end = ok => {
       if (finished) return; finished = true;
-      this.adActive = false; AU.applyGain(); cb(ok);
+      this.adActive = false; this.pending = false; AU.applyGain(); cb(ok);
     };
     this.gameplayStop();
+    // If the SDK never answers, don't leave the game frozen.
+    setTimeout(() => { if (!this.adActive) end(false); }, 8000);
     try {
       if (PORTAL === 'crazygames') {
         this.cg.ad.requestAd(kind, { adStarted: start, adFinished: () => end(true), adError: () => end(false) });

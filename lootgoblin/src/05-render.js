@@ -275,6 +275,13 @@ function drawWorld() {
 }
 
 function drawFx() {
+  const free = freeSlot(), tr = free >= 0 ? LAY.bag[free] : LAY.bagRect;
+  for (const fl of run.flyers) {
+    if (fl.t < 0) continue;
+    const k = ease(clamp(fl.t / fl.dur, 0, 1));
+    const x = lerp(fl.x, tr.x + tr.w / 2, k), y = lerp(fl.y, tr.y + tr.h / 2, k) - Math.sin(k * Math.PI) * LAY.S;
+    drawItemIcon(fl.item, x, y, LAY.S * (0.6 + 0.3 * k));
+  }
   for (const p of run.fx) {
     const a = clamp(p.life / (p.max * 0.5), 0, 1);
     if (p.coin) {
@@ -453,7 +460,7 @@ function drawInventory() {
   ctx.fillStyle = '#0b0714'; ctx.fillRect(0, LAY.scene.h, W, H - LAY.scene.h);
   ctx.fillStyle = '#2a1d45'; ctx.fillRect(0, LAY.scene.h, W, 3);
   const drag = game.drag && game.drag.moved ? game.drag : null;
-  const dragIt = drag ? getItem(drag.src) : null;
+  const dragIt = drag && getItem(drag.src) === drag.item ? drag.item : null;
   const selIt = game.sel ? getItem(game.sel) : null;
   const active = dragIt || selIt;
   // GEAR
@@ -523,7 +530,7 @@ function drawInventory() {
     if (active) txt('+' + fmt(sellValue(active, run)) + 'g', sr.x + sr.w / 2, sr.y + sr.h * 0.84, fs * 0.9, '#ffe08a', 'center', true);
   }
   // hint
-  if (run.hint && !drag) drawHint(run.hint);
+  if (run.hint && !drag && !run.dead) drawHint(run.hint);
   // dragged item follows the pointer
   if (dragIt) {
     drawItemIcon(dragIt, ptr.x, ptr.y - (ptr.touch ? S * 0.6 : 0), S * 0.95);
