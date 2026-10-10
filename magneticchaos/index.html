@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Magnetic Chaos: Keep the Sphere</title>
+<meta name="description" content="Steer a gravity well through hundreds of charged fragments. Keep the Spark off the walls and away from opposite-charge debris. How long can you survive?">
+<meta name="theme-color" content="#05060f">
+<meta property="og:title" content="Magnetic Chaos: Keep the Sphere">
+<meta property="og:description" content="A hypnotic physics survival game. Same charge repels. Opposite charge kills. Just one more second.">
+<meta property="og:image" content="cover-630x500.jpg">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="gl" tabindex="0" aria-label="Magnetic Chaos game"></canvas>
+
+<div id="hud" class="hidden">
+  <div id="clock"><span id="time">0.00</span><span id="best">SURVIVE</span></div>
+  <div id="tier"></div>
+  <div id="banner"><span id="bannerName"></span><span id="bannerSub"></span></div>
+  <div id="pulse" role="button" aria-label="Pulse"><div id="pulseFill"></div><span id="pulseLabel">PULSE</span><span id="combo"></span></div>
+  <div id="hint"><span class="mouse-only">Move the mouse to steer the gravity well</span><span class="touch-only">Drag anywhere to steer · tap to pulse</span></div>
+</div>
+
+<div id="corner">
+  <button id="btnMute" aria-label="Mute"><svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="wave" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="x" d="M16 9l6 6M22 9l-6 6"/></svg></button>
+  <button id="btnPause" aria-label="Pause"><svg viewBox="0 0 24 24"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg></button>
+</div>
+
+<div id="title" class="overlay">
+  <div class="panel">
+    <h1>MAGNETIC<br>CHAOS</h1>
+    <h2>KEEP THE SPHERE</h2>
+    <ul class="rules">
+      <li><i class="dot well"></i><span>Your <b>gravity well</b> pulls the Spark. <span class="mouse-only">Move the mouse.</span><span class="touch-only">Drag anywhere.</span></span></li>
+      <li><i class="dot pos"></i><span>Debris with the <b>same charge</b> is pushed away. Harmless.</span></li>
+      <li><i class="dot neg"></i><span><b>Opposite charge</b> is drawn in. One touch and it's over. So is the wall.</span></li>
+      <li><i class="dot white"></i><span>Brush past it to <b>graze</b>. Grazes charge a <b>PULSE</b> <span class="mouse-only">(click / Space)</span><span class="touch-only">(tap)</span>.</span></li>
+    </ul>
+    <button id="btnPlay" class="primary">PLAY</button>
+    <p id="titleBest" class="best"></p>
+    <p class="small">Headphones recommended · M mute · P pause</p>
+  </div>
+</div>
+
+<div id="over" class="overlay hidden">
+  <div class="panel">
+    <p id="oCause" class="cause"></p>
+    <p class="big"><span id="oTime">0.00</span><small>s</small></p>
+    <p id="oNew" class="newbest hidden">NEW BEST</p>
+    <p id="oRank" class="rank"></p>
+    <dl class="stats">
+      <div><dt>Best</dt><dd id="oBest">0</dd></div>
+      <div><dt>Grazes</dt><dd id="oGrazes">0</dd></div>
+      <div><dt>Top combo</dt><dd id="oCombo">0</dd></div>
+      <div><dt>Anomalies</dt><dd id="oAnoms">0</dd></div>
+    </dl>
+    <button id="btnRetry" class="primary">ONE MORE TRY</button>
+    <button id="btnRevive" class="secondary hidden">REVIVE · WATCH AD</button>
+    <button id="btnMenu" class="ghost">MENU</button>
+  </div>
+</div>
+
+<div id="pause" class="overlay hidden">
+  <div class="panel">
+    <h2 class="ptitle">PAUSED</h2>
+    <button id="btnResume" class="primary">RESUME</button>
+    <button id="btnMenu2" class="ghost">QUIT TO MENU</button>
+  </div>
+</div>
+
+<div id="nogl" class="overlay hidden">
+  <div class="panel"><h2>WebGL is unavailable</h2><p class="small">Magnetic Chaos needs WebGL. Please try an up-to-date Chrome, Edge, Firefox or Safari, and check that hardware acceleration is turned on.</p></div>
+</div>
+<div id="toast"></div>
+<noscript>Magnetic Chaos needs JavaScript to run.</noscript>
+<script src="game.js"></script>
+</body>
+</html>
