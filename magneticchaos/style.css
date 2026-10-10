@@ -1,0 +1,4 @@
+html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#04050c;}
+body{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;}
+#game{display:block;width:100vw;height:100vh;height:100dvh;cursor:default;outline:none;}
+noscript{color:#fff;font-family:sans-serif;display:block;padding:2rem;text-align:center;}
