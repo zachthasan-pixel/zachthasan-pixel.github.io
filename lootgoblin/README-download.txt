@@ -27,4 +27,4 @@ TIPS
   Bombs explode IN your bag when the fuse runs out. Throw them.
   Spend gold in the GOBLIN BANK between runs.
 
-Support: zachthasan@gmail.com  ·  More games: https://zahirhasan.com/apps.html
+Support: zachthasan@gmail.com  ·  More games: https://drzahirhasan.com/apps.html
