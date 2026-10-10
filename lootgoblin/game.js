@@ -1407,7 +1407,7 @@ function layout() {
     sceneH = Math.round(H * 0.55);
     const ph = H - sceneH;
     S = Math.floor(Math.min((ph - 46) / 3.25, (W - 60) / 12.6));
-    S = clamp(S, 30, 84);
+    S = clamp(S, 30, Math.max(84, Math.min(140, H / 10.5)));
     const g = Math.round(S * 0.1), gap = Math.round(S * 0.55);
     const gearW = 3 * S + 2 * g, bagW = BAG_COLS * S + (BAG_COLS - 1) * g, sellW = Math.round(S * 1.5);
     const total = gearW + gap + bagW + gap + sellW;
@@ -1423,7 +1423,7 @@ function layout() {
     LAY.g = g;
   } else {
     S = Math.floor(Math.min((W - 24) / 6.6, (H * 0.58 - 40) / 6.3));
-    S = clamp(S, 30, 80);
+    S = clamp(S, 30, Math.max(80, Math.min(130, W / 7.5)));
     sceneH = Math.round(Math.max(H * 0.4, H - (6.3 * S + 44)));
     const g = Math.round(S * 0.1);
     const rowW = 6 * S + 5 * g;
@@ -1445,7 +1445,7 @@ function layout() {
   LAY.gy = Math.round(sceneH * 0.82);
   LAY.hx = Math.round(Math.min(W * 0.26, W / 2 - 40));
   LAY.viewU = (W - LAY.hx) / LAY.P;
-  LAY.fs = clamp(S * 0.29, 12, 18);
+  LAY.fs = clamp(S * 0.29, 12, Math.max(18, S * 0.24));
 }
 
 // ---------------------------------------------------------------- scene ----
@@ -1759,7 +1759,7 @@ function drawHUD() {
   LAY.goldPos = { x: rx - gw - 16, y: pad + fs * 3.7 };
   // boss bar
   if (run.boss) {
-    const e = run.boss, w = Math.min(LAY.scene.w * 0.5, 420), bx2 = (LAY.scene.w - w) / 2, by2 = LAY.scene.h * 0.18;
+    const e = run.boss, w = Math.min(LAY.scene.w * 0.5, 420), bx2 = (LAY.scene.w - w) / 2, by2 = Math.max(LAY.scene.h * 0.18, fs * 6.2);
     txt(e.name, LAY.scene.w / 2, by2 - fs * 0.9, fs * 0.95, '#ff9a1f', 'center', false, true);
     panel(bx2, by2, w, fs * 0.9, '#1a0f2a', OUT, 2);
     ctx.fillStyle = '#ff9a1f'; ctx.fillRect(bx2 + 3, by2 + 3, (w - 6) * clamp(e.hp / e.maxHp, 0, 1), fs * 0.9 - 6);
@@ -1768,7 +1768,7 @@ function drawHUD() {
   if (run.banner) {
     const b = run.banner, a = b.t < 0.3 ? b.t / 0.3 : b.t > 2.4 ? (3 - b.t) / 0.6 : 1;
     ctx.globalAlpha = clamp(a, 0, 1);
-    const y2 = LAY.scene.h * 0.36;
+    const y2 = Math.max(LAY.scene.h * 0.36, run.boss ? fs * 9 : 0);
     ctx.fillStyle = 'rgba(8,4,16,0.6)'; ctx.fillRect(0, y2 - fs * 1.6, W, fs * 3.4);
     txt(b.title, W / 2, y2 - fs * 0.35, Math.min(fs * 1.35, W / (b.title.length * 1.15)), '#ffe08a', 'center', false, true);
     txt(b.sub, W / 2, y2 + fs * 1.05, fs * 0.95, '#d9cff5', 'center', true);
@@ -2051,14 +2051,18 @@ function drawTitle() {
   ctx.fillStyle = 'rgba(8,4,16,0.55)'; ctx.fillRect(0, 0, W, H);
   ctx.fillStyle = '#0b0714'; ctx.fillRect(0, LAY.scene.h, W, H - LAY.scene.h);
   const fs = LAY.fs, cx2 = W / 2;
-  const ts = Math.min(W / 13, H / 11, 54);
+  const ts = Math.min(W / 13, H / 11, 54 * Math.max(1, H / 900));
   const wob = Math.sin(game.t * 2) * 3;
   txt('INFINITE', cx2, H * 0.12 + wob, ts * 0.62, '#ffe08a', 'center', false, true);
   txt('LOOT GOBLIN', cx2, H * 0.12 + ts * 1.05 + wob, ts, '#ff9a1f', 'center', false, true);
   txt('ONE-BUTTON DUNGEON', cx2, H * 0.12 + ts * 1.95, ts * 0.36, '#c46bff', 'center', false, true);
   const lines = ['Your goblin runs and fights on his own.', 'YOU manage the loot. A chest drops every 3 seconds.', 'If your bag overflows... you explode.'];
-  lines.forEach((l, i) => txt(l, cx2, H * 0.12 + ts * 2.7 + i * fs * 1.45, fs * 1.0, i === 2 ? '#ff5a76' : '#e8e0ff', 'center', true));
-  const bw = Math.min(300, W - 40), bh = Math.round(fs * 2.9);
+  lines.forEach((l, i) => {
+    ctx.font = f(fs, true);
+    const sz = fs * Math.min(1, (W - 24) / ctx.measureText(l).width);
+    txt(l, cx2, H * 0.12 + ts * 2.7 + i * fs * 1.45, sz, i === 2 ? '#ff5a76' : '#e8e0ff', 'center', true);
+  });
+  const bw = Math.min(Math.max(300, fs * 17), W - 40), bh = Math.round(fs * 2.9);
   let y = Math.max(LAY.scene.h + 10, H * 0.12 + ts * 2.7 + fs * 5.2);
   button({ x: cx2 - bw / 2, y, w: bw, h: bh }, save.runs ? 'RUN AGAIN' : 'PLAY', () => { AU.sfx('click'); startRun(); }, { size: fs * 1.3 });
   y += bh + 12;

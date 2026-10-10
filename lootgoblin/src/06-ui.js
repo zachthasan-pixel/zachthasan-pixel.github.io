@@ -42,14 +42,18 @@ function drawTitle() {
   ctx.fillStyle = 'rgba(8,4,16,0.55)'; ctx.fillRect(0, 0, W, H);
   ctx.fillStyle = '#0b0714'; ctx.fillRect(0, LAY.scene.h, W, H - LAY.scene.h);
   const fs = LAY.fs, cx2 = W / 2;
-  const ts = Math.min(W / 13, H / 11, 54);
+  const ts = Math.min(W / 13, H / 11, 54 * Math.max(1, H / 900));
   const wob = Math.sin(game.t * 2) * 3;
   txt('INFINITE', cx2, H * 0.12 + wob, ts * 0.62, '#ffe08a', 'center', false, true);
   txt('LOOT GOBLIN', cx2, H * 0.12 + ts * 1.05 + wob, ts, '#ff9a1f', 'center', false, true);
   txt('ONE-BUTTON DUNGEON', cx2, H * 0.12 + ts * 1.95, ts * 0.36, '#c46bff', 'center', false, true);
   const lines = ['Your goblin runs and fights on his own.', 'YOU manage the loot. A chest drops every 3 seconds.', 'If your bag overflows... you explode.'];
-  lines.forEach((l, i) => txt(l, cx2, H * 0.12 + ts * 2.7 + i * fs * 1.45, fs * 1.0, i === 2 ? '#ff5a76' : '#e8e0ff', 'center', true));
-  const bw = Math.min(300, W - 40), bh = Math.round(fs * 2.9);
+  lines.forEach((l, i) => {
+    ctx.font = f(fs, true);
+    const sz = fs * Math.min(1, (W - 24) / ctx.measureText(l).width);
+    txt(l, cx2, H * 0.12 + ts * 2.7 + i * fs * 1.45, sz, i === 2 ? '#ff5a76' : '#e8e0ff', 'center', true);
+  });
+  const bw = Math.min(Math.max(300, fs * 17), W - 40), bh = Math.round(fs * 2.9);
   let y = Math.max(LAY.scene.h + 10, H * 0.12 + ts * 2.7 + fs * 5.2);
   button({ x: cx2 - bw / 2, y, w: bw, h: bh }, save.runs ? 'RUN AGAIN' : 'PLAY', () => { AU.sfx('click'); startRun(); }, { size: fs * 1.3 });
   y += bh + 12;
