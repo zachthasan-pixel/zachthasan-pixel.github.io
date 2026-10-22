@@ -1,0 +1,61 @@
+# Keeps drzahirhasan.com in step with the Maple & Pine Press catalogue.
+#
+# Every night (and whenever run by hand from the Actions tab) this fetches the
+# shared catalogue from the maple-and-pine-website repository, pulls any cover
+# it does not have yet from mapleandpinepress.com, rebuilds the book pages, and
+# commits the result if anything changed. GitHub Pages then publishes it.
+name: Sync catalogue and rebuild book pages
+
+on:
+  schedule:
+    - cron: "17 18 * * *"   # 03:17 Tokyo time, daily
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch the shared catalogue
+        run: |
+          curl -fsSL -o /tmp/catalog.json \
+            https://raw.githubusercontent.com/zachthasan-pixel/maple-and-pine-website/main/catalog/catalog.json
+          python3 -c "import json; json.load(open('/tmp/catalog.json'))"   # must be valid JSON
+          cp /tmp/catalog.json catalog/catalog.json
+
+      - name: Fetch any covers we do not have yet
+        run: |
+          python3 - <<'PY'
+          import json, os, urllib.request
+          cat = json.load(open("catalog/catalog.json"))
+          for b in cat["books"]:
+              dst = f"images/covers/{b['slug']}.jpg"
+              if os.path.exists(dst) or not b.get("cover"): continue
+              url = "https://mapleandpinepress.com/assets/" + b["cover"]
+              try:
+                  urllib.request.urlretrieve(url, dst); print("fetched", dst)
+              except Exception as e:
+                  print("could not fetch", url, e)
+          PY
+
+      - name: Rebuild
+        run: |
+          pip install --quiet pillow
+          python3 scripts/make-thumbs.py
+          node scripts/build-site.mjs
+
+      - name: Commit if anything changed
+        run: |
+          git config user.name "catalogue-sync"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nothing changed."
+          else
+            git commit -m "Rebuild from the shared catalogue ($(date -u +%Y-%m-%d))"
+            git push
+          fi
