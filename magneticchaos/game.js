@@ -48,7 +48,9 @@ const Portal = {
     this._try(() => { if (PORTAL === 'crazygames') this.cg.game.gameplayStop(); else if (PORTAL === 'poki') this.poki.gameplayStop(); });
   },
   happy() { this._try(() => { if (PORTAL === 'crazygames') this.cg.game.happytime(); }); },
-  get hasRewarded() { return this.ready && PORTAL !== 'web'; },
+  // CrazyGames: no revive ad. Ads are off during Basic Launch (a dead button gets a game
+  // rejected) and their rules forbid offering a rewarded continue next to the midgame restart.
+  get hasRewarded() { return this.ready && PORTAL === 'poki'; },
   // A break between runs. cb always runs exactly once.
   midgame(cb) { this._ad('midgame', ok => cb(ok)); },
   // Opt-in rewarded video. cb(true) only if the ad was actually watched.
