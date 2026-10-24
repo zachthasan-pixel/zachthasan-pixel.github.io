@@ -6,7 +6,7 @@
   "fiction": "Fantasy & Speculative Fiction",
   "kids": "Children's Books"
  },
- "_updated": "2026-10-22",
+ "_updated": "2026-10-23",
  "books": [
   {
    "slug": "a-land-unknown",
@@ -2005,9 +2005,22 @@
    "subtitle": "A Playful Activity Book for Ages 4 to 6 - Counting, Shapes, Patterns, Adding and Taking Away",
    "author": "Dr. Zahir Hasan",
    "list": "kids",
-   "status": "forthcoming",
-   "asins": [],
-   "description": [],
+   "status": "published",
+   "asins": [
+    "B0HHS5DJY5"
+   ],
+   "description": [
+    "Tom the Dinosaur loves numbers, and he would very much like some company. Across 72 full-colour pages, young learners count dinosaurs, trace the numbers from 0 to 10, hunt for shapes, finish patterns, and take their first steps into adding and taking away. Eight friendly dinosaurs turn up on nearly every page, and every page is made to be drawn on, coloured in, and done again tomorrow.",
+    "Inside you will find:",
+    "• Numbers 0 to 10, with big traceable numerals, counting and ten frames",
+    "• Shapes to trace, hunt for, sort and build pictures from",
+    "• Patterns to say out loud, finish and invent",
+    "• Comparing, sorting, ordering by size and measuring",
+    "• Gentle adding and taking away, with dinosaurs, number lines and ten frames to lean on",
+    "• Number-path puzzles, a maze, colour-by-number and a big final challenge",
+    "• A complete answer key, a short guide for grown-ups, and a certificate to finish on",
+    "Written for children aged 4 to 6, at home or in the classroom. Big artwork, one idea per page, and plenty of room for a wobbly pencil. All you need is a pencil, some crayons, and a little curiosity."
+   ],
    "cover": "covers/math-adventures-with-tom-the-dinosaur.jpg",
    "coverFit": "contain",
    "series": null,
@@ -2024,7 +2037,7 @@
    "authorSite": {
     "show": true,
     "section": "kids",
-    "blurb": "",
+    "blurb": "Tom the Dinosaur loves numbers, and he'd love some company. Across 72 full-colour pages, children aged 4 to 6 count dinosaurs, trace numbers, hunt for shapes, finish patterns, and take their first gentle steps into adding and taking away — one idea per page, with plenty of room for a wobbly pencil.",
     "featured": false,
     "amazonJp": false
    }
