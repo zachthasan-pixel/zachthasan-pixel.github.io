@@ -66,6 +66,17 @@ const ORDER = ["fiction", "kids", "policy", "practice"];
 // ─── Helpers ──────────────────────────────────────────────────────────────
 const esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const attr = (s) => esc(s).replace(/'/g, "&#39;");
+// Decode HTML entities so values re-read from already-built pages (legacy reshell)
+// are not escaped a second time. Loops to fully unwind layers accumulated by
+// earlier double-escaping (e.g. "&amp;amp;amp;" -> "&"); &amp; is decoded last.
+const decodeEntities = (s) => {
+  let out = String(s ?? ""), prev;
+  do {
+    prev = out;
+    out = out.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&");
+  } while (out !== prev);
+  return out;
+};
 const bookUrl = (b) => `books/${b.slug}.html`;
 const thumb = (b) => `images/covers/thumbs/${b.slug}.jpg`;
 const full = (b) => `images/covers/${b.slug}.jpg`;
@@ -102,6 +113,7 @@ function shellTop({ active, depth = 0, title, description, url, image, jsonld, t
   ${image ? `<meta property="og:image" content="${SITE}/${image}">\n  <meta name="twitter:card" content="summary_large_image">` : `<meta name="twitter:card" content="summary">`}
   ${jsonld ? `<script type="application/ld+json">${JSON.stringify(jsonld)}</script>` : ""}
   <link rel="stylesheet" href="${p}css/site.css">
+  <!-- Cloudflare Web Analytics (free, no cookies) --><script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "995d9b4d33ac468bb84cb0bc4769b0a8"}'></script>
 </head>
 <body>
 <div class="site">
@@ -511,8 +523,8 @@ function refreshLegacy() {
     const path = join(ROOT, page);
     if (!existsSync(path)) continue;
     const html = readFileSync(path, "utf8");
-    const title = (html.match(/<title>([^<]*)<\/title>/) || [, page])[1];
-    const desc = (html.match(/<meta name="description" content="([^"]*)"/) || [, ""])[1];
+    const title = decodeEntities((html.match(/<title>([^<]*)<\/title>/) || [, page])[1]);
+    const desc = decodeEntities((html.match(/<meta name="description" content="([^"]*)"/) || [, ""])[1]);
     const mainMatch = html.match(/<main>([\s\S]*?)<\/main>/);
     if (!mainMatch) continue;
     // keep the page's own stylesheet for its inner content, load the shared one after it
