@@ -527,6 +527,11 @@ function refreshLegacy() {
     const desc = decodeEntities((html.match(/<meta name="description" content="([^"]*)"/) || [, ""])[1]);
     const mainMatch = html.match(/<main>([\s\S]*?)<\/main>/);
     if (!mainMatch) continue;
+    // unwrap the legacy-main div(s) added by earlier runs, so each run adds exactly one
+    let inner = mainMatch[1];
+    const wrap = /^\s*<div class="legacy-main">([\s\S]*)<\/div>\s*$/;
+    while (wrap.test(inner)) inner = inner.match(wrap)[1];
+    mainMatch[1] = inner;
     // keep the page's own stylesheet for its inner content, load the shared one after it
     const out = `${shellTop({ active, title, description: desc, url: page }).replace(
       '<link rel="stylesheet" href="css/site.css">',
