@@ -36,6 +36,7 @@ const UI = {
       if (document.hidden) { if (G.mode !== 'demo' && (G.state === 'play' || G.state === 'countdown') && !this.paused) this.togglePause(true); AU.suspend(); }
       else if (!this.paused) AU.resume();
     });
+    addEventListener('blur', () => { if (G.mode !== 'demo' && (G.state === 'play' || G.state === 'countdown') && !this.paused && !this.screen) this.togglePause(true); });
     const markInput = () => {
       this.anyInput = true;
       if (G.mode && G.mode !== 'demo' && (G.state === 'play' || G.state === 'countdown') && !this.paused && !this.screen) Portal.gameplayStart();
@@ -87,9 +88,12 @@ const UI = {
     $('ab1').classList.toggle('hidden', m === 'party');
     $('touch').classList.toggle('party', m === 'party');
     $('feed').innerHTML = '';
+    $('bigText').classList.remove('on');
+    Input.mouse.mode = false; // don't roll toward wherever the cursor was left
+    $('lives').classList.add('hidden');
     $('hint').className = '';
     let tag = A.name.toUpperCase();
-    if (m === 'daily') tag = 'DAILY · ' + G.mod.name.toUpperCase() + ' · ' + tag;
+    if (m === 'daily') tag = 'DAILY · ' + G.mod.name.toUpperCase() + (innerWidth > 520 ? ' · ' + tag : '');
     if (m === 'party') tag = 'ROUND ' + G.party.round + ' · ' + tag;
     if (m === 'tutorial') tag = 'WARM-UP';
     $('modeTag').textContent = tag;
@@ -101,6 +105,7 @@ const UI = {
     }
     const p2 = G.players[1];
     if (p2) document.querySelectorAll('.tbtn.ab[data-slot="2"] span').forEach(e => { e.textContent = ABILITIES[p2.ability].icon; });
+    if (G.rookie) { $('lives').classList.remove('hidden'); this.hintFor('Rookie bonus: you get <b>2 lives</b> while in Bronze', 3); }
     if (m === 'tutorial') this.tutorialHint(0);
     else if (m !== 'demo' && Save.d.stats.matches < 3 && !Input.touch) this.hintFor('Hold SPACE or the mouse button to charge a big dash', 4);
     if (m === 'party') this.hintFor(Input.touch ? 'P1 left half · P2 right half' : 'P1: WASD + Space · P2: Arrows + Enter', 3);
@@ -116,7 +121,7 @@ const UI = {
       t ? 'Tap <b>DASH</b> to slam into a rival!' : 'Tap <kbd>SPACE</kbd> or click to <b>DASH</b> into a rival!',
       t ? 'HOLD <b>DASH</b>, then let go, for a charged hit' : '<b>HOLD</b> <kbd>SPACE</kbd> then let go for a charged hit',
       t ? 'Tap 💥 for a Shockwave' : 'Press <kbd>E</kbd> or right-click for a 💥 Shockwave',
-      'Knock them all off the edge! The more <b style="color:#ff7a4a">%</b>, the further they fly',
+      'Knock them all off! Higher <b style="color:#ff7a4a">%</b> = they fly further',
     ];
     const h = $('hint'); h.innerHTML = lines[step]; h.className = 'on';
     clearTimeout(this.hintT);
@@ -151,6 +156,7 @@ const UI = {
   hud() {
     if (!G.mode || G.mode === 'demo') return;
     $('leftN').textContent = G.alive().length;
+    if (G.rookie && G.players[0]) $('lives').textContent = '❤'.repeat(Math.max(0, G.players[0].lives)) ;
     for (const o of G.players) {
       const ab = ABILITIES[o.ability], f = clamp(o.abCd / ab.cd, 0, 1);
       if (o.slot === 1) {
@@ -223,6 +229,7 @@ const UI = {
     if (won) { who.textContent = 'P' + won + ' WINS THE MATCH!'; who.style.color = won === 1 ? '#ffe25a' : '#5fb8ff'; Portal.happy(); }
     else if (w && w.human) { who.textContent = w.name + ' WINS'; who.style.color = w.slot === 1 ? '#ffe25a' : '#5fb8ff'; }
     else { who.textContent = w ? w.name + ' (CPU) WINS' : 'NOBODY WINS'; who.style.color = '#ffffff'; }
+    $('prNote').textContent = !won && !(w && w.human) ? 'A CPU took the round, so no point this time.' : '';
     $('prS1').textContent = P.score[0]; $('prS2').textContent = P.score[1];
     $('btnNextRound').textContent = won ? 'REMATCH' : 'NEXT ROUND';
     this.show('partyRound');
@@ -249,7 +256,7 @@ const UI = {
     return this.padConfirm();
   },
   padConfirm() {
-    if (performance.now() - this.shownAt < 900) return !!this.screen; // don't let a held dash skip the results
+    if (performance.now() - this.shownAt < 1300) return !!this.screen; // don't let a held dash skip the results
     const map = { menu: 'btnPlay', result: 'btnAgain', partySetup: 'btnPartyGo', partyRound: 'btnNextRound', dailyIntro: 'btnDailyGo', pause: 'btnResume' };
     const id = map[this.screen];
     if (!id) return false;
@@ -300,7 +307,8 @@ const UI = {
   },
   // --- locker ----------------------------------------------------------------------
   openLocker() { this.show('locker'); this.renderLocker(); },
-  renderLocker() {
+  renderLocker(preview) {
+    if (!preview) this.pendingBuy = null;
     const S = Save.d, tab = this.lockerTab, tier = rankOf(S.rp).i;
     document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
     const grid = $('grid'); grid.innerHTML = '';
@@ -322,7 +330,8 @@ const UI = {
         d.appendChild(cv);
         label = document.createElement('span'); label.textContent = it.name; d.appendChild(label);
         const pr = document.createElement('span'); pr.className = 'price';
-        pr.textContent = owned ? (selected ? 'EQUIPPED' : 'OWNED') : locked ? '🔒 ' + RANKS[it.rank].name : '🪙 ' + it.price;
+        pr.textContent = owned ? (selected ? 'EQUIPPED' : 'OWNED') : locked ? '🔒 ' + RANKS[it.rank].name : preview === k ? 'TAP TO BUY · 🪙 ' + it.price : '🪙 ' + it.price;
+        if (preview === k) d.classList.add('buy');
         d.appendChild(pr);
       }
       if (selected) d.classList.add('sel');
@@ -330,7 +339,7 @@ const UI = {
       d.addEventListener('click', () => this.lockerPick(tab, k));
       grid.appendChild(d);
     }
-    paintCreature($('preview'), S.skin, S.hat, ABILITIES[S.ability].icon);
+    if (!preview) paintCreature($('preview'), S.skin, S.hat, ABILITIES[S.ability].icon);
     this.syncCoins();
   },
   lockerPick(tab, k) {
@@ -343,7 +352,13 @@ const UI = {
       if (!S.owned[k]) {
         if (it.rank && it.rank > tier) { AU.deny(); this.toast('🔒 Reach ' + RANKS[it.rank].name + ' to buy ' + it.name); return; }
         if (S.coins < it.price) { AU.deny(); this.toast('Need ' + (it.price - S.coins) + ' more 🪙. Win matches and finish missions!'); return; }
-        S.coins -= it.price; S.owned[k] = 1; AU.coin(); this.toast('Bought ' + it.name + '!');
+        if (this.pendingBuy !== k) { // first tap previews, second tap buys
+          this.pendingBuy = k; AU.ui();
+          paintCreature($('preview'), tab === 'skin' ? k : S.skin, tab === 'hat' ? k : S.hat, ABILITIES[S.ability].icon);
+          this.renderLocker(k); return;
+        }
+        S.coins -= it.price; S.owned[k] = 1; AU.win(); this.toast('🎉 New ' + (tab === 'skin' ? 'skin' : 'hat') + ': <b>' + it.name + '</b>!');
+        this.pendingBuy = null;
       }
       if (tab === 'skin') S.skin = k; else S.hat = k;
     }

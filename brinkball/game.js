@@ -195,31 +195,31 @@ const ARENA_KEYS = Object.keys(ARENAS);
 // Cosmetics. price 0 = starter. rank = minimum tier to buy (prestige items).
 const SKINS = {
   tomato: { name: 'Tomato', c1: '#ff5a4e', c2: '#c7262b', price: 0 },
-  sky: { name: 'Sky', c1: '#5fb8ff', c2: '#2a6fd6', price: 120 },
-  lime: { name: 'Lime', c1: '#a6f04a', c2: '#4fa82a', price: 120 },
-  grape: { name: 'Grape', c1: '#b884ff', c2: '#6b3fd1', price: 160 },
-  sunny: { name: 'Sunny', c1: '#ffe25a', c2: '#e0a020', price: 160 },
-  mint: { name: 'Mint', c1: '#6ff0c8', c2: '#1fa985', price: 200 },
-  bubble: { name: 'Bubblegum', c1: '#ff9ad5', c2: '#e04aa0', price: 220 },
-  coal: { name: 'Coal', c1: '#5b5b6b', c2: '#25252f', price: 300 },
-  snow: { name: 'Snow', c1: '#ffffff', c2: '#b8c4d8', price: 300 },
-  melon: { name: 'Melon', c1: '#7ee06a', c2: '#2f8a3a', price: 380, pattern: 'stripes', pc: '#1d5e27' },
-  beach: { name: 'Beach Ball', c1: '#ffffff', c2: '#d8d8e6', price: 450, pattern: 'beach' },
-  lava: { name: 'Lava', c1: '#ff8a3a', c2: '#b0201a', price: 520, pattern: 'spots', pc: '#ffd36b', rank: 2 },
-  galaxy: { name: 'Galaxy', c1: '#4a3ab8', c2: '#120a3a', price: 700, pattern: 'stars', pc: '#ffffff', rank: 3 },
-  gold: { name: 'Solid Gold', c1: '#ffe48a', c2: '#c98a12', price: 1200, pattern: 'shine', rank: 4 },
+  sky: { name: 'Sky', c1: '#5fb8ff', c2: '#2a6fd6', price: 240 },
+  lime: { name: 'Lime', c1: '#a6f04a', c2: '#4fa82a', price: 240 },
+  grape: { name: 'Grape', c1: '#b884ff', c2: '#6b3fd1', price: 320 },
+  sunny: { name: 'Sunny', c1: '#ffe25a', c2: '#e0a020', price: 320 },
+  mint: { name: 'Mint', c1: '#6ff0c8', c2: '#1fa985', price: 400 },
+  bubble: { name: 'Bubblegum', c1: '#ff9ad5', c2: '#e04aa0', price: 440 },
+  coal: { name: 'Coal', c1: '#5b5b6b', c2: '#25252f', price: 600 },
+  snow: { name: 'Snow', c1: '#ffffff', c2: '#b8c4d8', price: 600 },
+  melon: { name: 'Melon', c1: '#7ee06a', c2: '#2f8a3a', price: 760, pattern: 'stripes', pc: '#1d5e27' },
+  beach: { name: 'Beach Ball', c1: '#ffffff', c2: '#d8d8e6', price: 900, pattern: 'beach' },
+  lava: { name: 'Lava', c1: '#ff8a3a', c2: '#b0201a', price: 1040, pattern: 'spots', pc: '#ffd36b', rank: 2 },
+  galaxy: { name: 'Galaxy', c1: '#4a3ab8', c2: '#120a3a', price: 1400, pattern: 'stars', pc: '#ffffff', rank: 3 },
+  gold: { name: 'Solid Gold', c1: '#ffe48a', c2: '#c98a12', price: 1600, pattern: 'shine', rank: 4 },
 };
 const HATS = {
   none: { name: 'No hat', price: 0 },
-  cap: { name: 'Cap', price: 100 },
-  bow: { name: 'Bow', price: 120 },
-  horns: { name: 'Horns', price: 200 },
-  sprout: { name: 'Sprout', price: 150 },
-  tophat: { name: 'Top Hat', price: 260 },
-  viking: { name: 'Viking', price: 340 },
-  chef: { name: 'Chef', price: 300 },
-  halo: { name: 'Halo', price: 420, rank: 2 },
-  crown: { name: 'Crown', price: 900, rank: 4 },
+  cap: { name: 'Cap', price: 200 },
+  bow: { name: 'Bow', price: 240 },
+  horns: { name: 'Horns', price: 400 },
+  sprout: { name: 'Sprout', price: 300 },
+  tophat: { name: 'Top Hat', price: 520 },
+  viking: { name: 'Viking', price: 680 },
+  chef: { name: 'Chef', price: 600 },
+  halo: { name: 'Halo', price: 840, rank: 2 },
+  crown: { name: 'Crown', price: 1800, rank: 4 },
 };
 
 const MISSION_POOL = [
@@ -647,7 +647,7 @@ class Orb {
     const cdMul = (turbo ? 0.5 : 1) * (this.mods.hyper ? 0.5 : 1);
     this.dashCd = Math.max(0, this.dashCd - dt / cdMul);
     this.abCd = Math.max(0, this.abCd - dt);
-    this.spawnT = Math.max(0, this.spawnT - dt);
+    this.spawnT = Math.max(0, this.spawnT - dt); this.guardT = Math.max(0, (this.guardT || 0) - dt);
     this.hitFlash = Math.max(0, this.hitFlash - dt * 4);
     this.squash *= Math.exp(-dt * 10);
     this.emote = Math.max(0, this.emote - dt);
@@ -947,8 +947,12 @@ const G = {
       o.face = Math.atan2(-y, -x);
       this.orbs.push(o);
     }
+    for (const o of this.orbs) o.guardT = 2.6;
+    const rookie = mode === 'royale' && rankOf(S.rp).i === 0 && S.stats.matches < 10;
+    for (const p of this.players) { p.lives = mode === 'tutorial' ? 99 : rookie ? 2 : 1; p.x *= 0.7; p.y *= 0.7; }
+    this.rookie = rookie;
     this.pickupT = this.mods.rain ? 3 : rand(7, 10);
-    this.state = 'countdown'; this.countdown = mode === 'tutorial' ? 0.01 : 1.6;
+    this.state = 'countdown'; this.countdown = mode === 'tutorial' || mode === 'demo' ? 0.01 : 2.4;
     this.camInit = true;
     if (mode !== 'demo') S.arenasSeen[arenaKey] = 1;
     AU.intensity = 0; AU.quiet = mode === 'demo';
@@ -981,7 +985,7 @@ const G = {
       const before = Math.ceil(this.countdown / 0.8);
       this.countdown -= dt;
       const after = Math.ceil(this.countdown / 0.8);
-      if (after !== before && after > 0 && this.mode !== 'demo') { UI.big(after === 2 ? 'READY' : '', '#fff'); AU.count(false); }
+      if (after !== before && after > 0 && this.mode !== 'demo') { UI.big(String(after), '#fff'); AU.count(false); }
       if (this.countdown <= 0) { this.state = 'play'; if (this.mode !== 'demo') { UI.big('GO!', '#ffe25a'); AU.count(true); AU.startMusic(); } }
       Input.apply(this); // let players aim, not move
       for (const o of this.orbs) { o.wantDash = o.wantAbility = false; o.dashHeld = false; o.charging = 0; }
@@ -1059,7 +1063,7 @@ const G = {
     let heatK = (a.dashing ? 0.6 + ch * 0.3 : 0.3) * (v.heat / 100);
     if (this.mods.heavy) { k += 0.25; heatK *= 1.5; }
     let heatGain = impact < (a.dashing ? 150 : 260) ? 0 : impact * (a.dashing ? 0.02 : 0.008) * (a.power === 'spikes' ? 1.5 : 1) * (this.mods.heavy ? 2 : 1);
-    if (v.anchored) { k = 0; heatK *= 0.1; heatGain = 0; }
+    if (v.anchored || v.guardT > 0) { k = 0; heatK *= 0.1; heatGain = 0; }
     if (v.shieldHits > 0 && impact > 250) {
       v.shieldHits = 0; v.setPower(null); k = 0; heatK *= 0.2; heatGain = 0;
       this.ring(v.x, v.y, v.r, v.r * 2.6, 0.35, POWERUPS.shield.col); AU.bumper();
@@ -1226,8 +1230,10 @@ const G = {
     const aliveAfter = this.alive().length; // o is already marked falling
     o.place = aliveAfter + 1;
     if (o.human || o.lastHitBy && o.lastHitBy.human) AU.fall();
-    if (this.mode === 'tutorial' && o.human) {
-      UI.feedMsg('<b>Oops!</b> Back you go. Stay away from the edge');
+    if (o.human && o.lives > 1 && this.mode !== 'party') {
+      o.lives--;
+      UI.feedMsg(this.mode === 'tutorial' ? '<b>Oops!</b> Back you go!' : '<b>Rookie bonus:</b> one more life!');
+      o.respawning = true;
       setTimeout(() => this.respawn(o), 900);
       return;
     }
@@ -1252,7 +1258,7 @@ const G = {
     for (let i = 0; i < 16; i++) this.fx.push({ type: 'p', x: o.x, y: o.y, vx: rand(-160, 160), vy: rand(-160, 160), vz: rand(100, 400), z: 0, life: 0.8, max: 0.8, col: SKINS[o.skin].c1, size: rand(3, 7) });
     // Match flow
     const left = this.alive();
-    if (this.mode === 'tutorial' && !left.includes(this.players[0])) left.push(this.players[0]);
+    if (this.players[0] && this.players[0].respawning && !left.includes(this.players[0])) left.push(this.players[0]);
     if (this.mode === 'demo') {
       if (left.length <= 1 && !this.demoEnd) { this.demoEnd = 1; setTimeout(() => { if (this.mode === 'demo') this.start('demo'); }, 1800); }
       return;
@@ -1283,13 +1289,14 @@ const G = {
     }
   },
   onEliminated(o) {
-    if (this.mode === 'tutorial' && o.human) o.alive = true; // respawn() brings it back
+    if (o.respawning) o.alive = true; // respawn() brings it back
   },
   respawn(o) {
-    if (this.mode !== 'tutorial' || this.state !== 'play') return;
+    o.respawning = false;
+    if (this.state !== 'play') return;
     const live = this.arena.tiles.filter(t => t.state === 0).sort((a, b) => Math.hypot(a.x, a.y) - Math.hypot(b.x, b.y));
     const t = live[0]; if (!t) return;
-    Object.assign(o, { x: t.x, y: t.y, vx: 0, vy: 0, falling: 0, fz: 0, heat: 0, alive: true, spawnT: 0.6, teeter: 0, lastHitBy: null });
+    Object.assign(o, { x: t.x, y: t.y, vx: 0, vy: 0, falling: 0, fz: 0, heat: 0, alive: true, spawnT: 0.6, guardT: 2, teeter: 0, lastHitBy: null });
     this.ring(o.x, o.y, 4, 70, 0.4, '#ffe25a'); AU.pickup();
   },
   finish() {
@@ -1332,12 +1339,13 @@ const G = {
     const res = { mode: this.mode, place, n, kos: o.kos, time: o.survived, coins: 0, rp: 0, rpBefore: S.rp, unlocks: [], dailyScore: 0, newBest: false };
     const coinTable = [60, 42, 32, 24, 18, 14, 11, 8];
     res.coins = (coinTable[place - 1] || 8) + o.kos * 8;
-    if (this.mode === 'royale' || this.mode === 'tutorial') {
+    if (this.mode === 'tutorial') { res.rp = 25; S.rp += 25; }
+    if (this.mode === 'royale') {
       const tier = rankOf(S.rp).i;
       const gain = [32, 20, 12, 5, 0, -3, -6, -9][place - 1] || 0;
       res.rp = gain < 0 ? Math.round(gain * clamp(tier / 2, 0, 1.6)) : gain;
       res.rp += o.kos * 3;
-      if (this.mode === 'tutorial') res.rp = Math.max(res.rp, 20);
+      if (tier === 0) res.rp = Math.max(res.rp, 5); // Bronze always moves forward
       const before = rankOf(S.rp);
       S.rp = Math.max(0, S.rp + res.rp);
       const after = rankOf(S.rp);
@@ -1367,8 +1375,7 @@ const G = {
       if (place === 1) Missions.track('win', 1);
       if (place <= 3) Missions.track('top3', 1);
     }
-    Missions.track('survive', Math.round(o.survived));
-    S.stats.kos += o.kos;
+    if (this.mode !== 'tutorial') { Missions.track('survive', Math.round(o.survived)); S.stats.kos += o.kos; }
     S.coins += res.coins;
     Save.write();
     return res;
@@ -1403,6 +1410,7 @@ const Missions = {
     return def.text.replace('{n}', m.n).replace('{es}', m.n === 1 ? '' : 'es').replace('{s}', m.n === 1 ? '' : 's');
   },
   track(id, amt) {
+    if (G.mode === 'tutorial' || G.mode === 'demo') return;
     const M = this.ensure();
     for (const m of M.list) {
       if (m.id !== id || m.done) continue;
@@ -1635,7 +1643,7 @@ const R = {
     const portrait = this.h > this.w;
     const padTop = (portrait ? 120 : this.h / this.dpr < 500 ? 46 : 70) * this.dpr, padBot = (Input.touch && portrait ? 190 : this.h / this.dpr < 500 ? 16 : 50) * this.dpr;
     const bw = x1 - x0, bh = (y1 - y0) * SQUASH + TILE_H;
-    let s = Math.min(this.w * 0.94 / bw, (this.h - padTop - padBot) / bh);
+    let s = Math.min(this.w * (portrait ? 1.08 : 0.94) / bw, (this.h - padTop - padBot) / bh);
     s = Math.min(s, 2.2 * this.dpr);
     const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2 + (padBot - padTop) / 2 / (s * SQUASH);
     if (G.camInit) { this.cam.x = cx; this.cam.y = cy; this.cam.s = s; G.camInit = false; return; }
@@ -1702,7 +1710,7 @@ const R = {
     objs.sort((a, b) => a[0] - b[0]);
     for (const [, k, v] of objs) { if (k === 'o') this.orb(v); else if (k === 'b') this.bumper(v); else this.pickup(v); }
     this.effects(s);
-    for (const o of G.orbs) if (o.alive && !o.falling) this.tag(o);
+    if (G.mode !== 'demo') for (const o of G.orbs) if (o.alive && !o.falling) this.tag(o);
     this.texts();
   },
   hexPath(x, y, k) {
@@ -1834,6 +1842,10 @@ const R = {
         c.beginPath(); c.ellipse(gx, gy + 2 * s, r * 1.25, r * 0.55, 0, -Math.PI / 2, -Math.PI / 2 + TAU * (ready ? 1 : 1 - o.dashCd / DASH_CD)); c.stroke();
       }
     }
+    if (o.guardT > 0 && !o.falling && Math.floor(o.guardT * 6) % 2 === 0) {
+      c.strokeStyle = 'rgba(255,255,255,0.7)'; c.lineWidth = 2 * this.dpr;
+      c.beginPath(); c.arc(gx, gy - o.r * s * 0.85, r * 1.35, 0, TAU); c.stroke();
+    }
     const cx = gx, cy = gy - o.r * s * 0.85 + drop;
     const sq = o.squash, jit = o.charging > 0 ? rand(-1, 1) * 1.5 * this.dpr * Math.min(1, o.charging / CHARGE_T) : 0;
     c.save(); c.translate(cx + jit, cy); c.scale(1 + sq * 0.22, 1 - sq * 0.18);
@@ -1942,7 +1954,7 @@ const R = {
     const c = this.c, s = this.cam.s, d = this.dpr;
     const x = this.sx(o.x), y = this.sy(o.y) - o.r * s * 1.85 - (o.hat !== 'none' ? o.r * s * 0.45 : 0) - 6 * d;
     c.textAlign = 'center'; c.textBaseline = 'alphabetic';
-    const fs = Math.round(clamp(12 * s, 10 * d, 15 * d));
+    const fs = Math.round(clamp(13 * s, 11.5 * d, 16 * d));
     // heat %
     const hc = o.heat < 50 ? '#ffffff' : o.heat < 100 ? '#ffc04a' : '#ff5a3a';
     c.font = '900 ' + Math.round(fs * 1.15) + 'px ' + FONT;
@@ -1955,7 +1967,7 @@ const R = {
       const col = o.slot === 2 ? '#5fb8ff' : '#ffe25a';
       c.strokeText(o.name, x, ny); c.fillStyle = col; c.fillText(o.name, x, ny);
       c.fillStyle = col; c.beginPath(); c.moveTo(x - 6 * d, ny + 3 * d); c.lineTo(x + 6 * d, ny + 3 * d); c.lineTo(x, ny + 9 * d); c.fill();
-    } else if (G.orbs.length <= 9) {
+    } else if (G.alive().length <= 5 || this.w / d > 1100) {
       c.globalAlpha = 0.85;
       c.strokeText(o.name, x, ny); c.fillStyle = '#e8e4ff'; c.fillText(o.name, x, ny);
       c.globalAlpha = 1;
@@ -2032,6 +2044,7 @@ const UI = {
       if (document.hidden) { if (G.mode !== 'demo' && (G.state === 'play' || G.state === 'countdown') && !this.paused) this.togglePause(true); AU.suspend(); }
       else if (!this.paused) AU.resume();
     });
+    addEventListener('blur', () => { if (G.mode !== 'demo' && (G.state === 'play' || G.state === 'countdown') && !this.paused && !this.screen) this.togglePause(true); });
     const markInput = () => {
       this.anyInput = true;
       if (G.mode && G.mode !== 'demo' && (G.state === 'play' || G.state === 'countdown') && !this.paused && !this.screen) Portal.gameplayStart();
@@ -2083,9 +2096,12 @@ const UI = {
     $('ab1').classList.toggle('hidden', m === 'party');
     $('touch').classList.toggle('party', m === 'party');
     $('feed').innerHTML = '';
+    $('bigText').classList.remove('on');
+    Input.mouse.mode = false; // don't roll toward wherever the cursor was left
+    $('lives').classList.add('hidden');
     $('hint').className = '';
     let tag = A.name.toUpperCase();
-    if (m === 'daily') tag = 'DAILY · ' + G.mod.name.toUpperCase() + ' · ' + tag;
+    if (m === 'daily') tag = 'DAILY · ' + G.mod.name.toUpperCase() + (innerWidth > 520 ? ' · ' + tag : '');
     if (m === 'party') tag = 'ROUND ' + G.party.round + ' · ' + tag;
     if (m === 'tutorial') tag = 'WARM-UP';
     $('modeTag').textContent = tag;
@@ -2097,6 +2113,7 @@ const UI = {
     }
     const p2 = G.players[1];
     if (p2) document.querySelectorAll('.tbtn.ab[data-slot="2"] span').forEach(e => { e.textContent = ABILITIES[p2.ability].icon; });
+    if (G.rookie) { $('lives').classList.remove('hidden'); this.hintFor('Rookie bonus: you get <b>2 lives</b> while in Bronze', 3); }
     if (m === 'tutorial') this.tutorialHint(0);
     else if (m !== 'demo' && Save.d.stats.matches < 3 && !Input.touch) this.hintFor('Hold SPACE or the mouse button to charge a big dash', 4);
     if (m === 'party') this.hintFor(Input.touch ? 'P1 left half · P2 right half' : 'P1: WASD + Space · P2: Arrows + Enter', 3);
@@ -2112,7 +2129,7 @@ const UI = {
       t ? 'Tap <b>DASH</b> to slam into a rival!' : 'Tap <kbd>SPACE</kbd> or click to <b>DASH</b> into a rival!',
       t ? 'HOLD <b>DASH</b>, then let go, for a charged hit' : '<b>HOLD</b> <kbd>SPACE</kbd> then let go for a charged hit',
       t ? 'Tap 💥 for a Shockwave' : 'Press <kbd>E</kbd> or right-click for a 💥 Shockwave',
-      'Knock them all off the edge! The more <b style="color:#ff7a4a">%</b>, the further they fly',
+      'Knock them all off! Higher <b style="color:#ff7a4a">%</b> = they fly further',
     ];
     const h = $('hint'); h.innerHTML = lines[step]; h.className = 'on';
     clearTimeout(this.hintT);
@@ -2147,6 +2164,7 @@ const UI = {
   hud() {
     if (!G.mode || G.mode === 'demo') return;
     $('leftN').textContent = G.alive().length;
+    if (G.rookie && G.players[0]) $('lives').textContent = '❤'.repeat(Math.max(0, G.players[0].lives)) ;
     for (const o of G.players) {
       const ab = ABILITIES[o.ability], f = clamp(o.abCd / ab.cd, 0, 1);
       if (o.slot === 1) {
@@ -2219,6 +2237,7 @@ const UI = {
     if (won) { who.textContent = 'P' + won + ' WINS THE MATCH!'; who.style.color = won === 1 ? '#ffe25a' : '#5fb8ff'; Portal.happy(); }
     else if (w && w.human) { who.textContent = w.name + ' WINS'; who.style.color = w.slot === 1 ? '#ffe25a' : '#5fb8ff'; }
     else { who.textContent = w ? w.name + ' (CPU) WINS' : 'NOBODY WINS'; who.style.color = '#ffffff'; }
+    $('prNote').textContent = !won && !(w && w.human) ? 'A CPU took the round, so no point this time.' : '';
     $('prS1').textContent = P.score[0]; $('prS2').textContent = P.score[1];
     $('btnNextRound').textContent = won ? 'REMATCH' : 'NEXT ROUND';
     this.show('partyRound');
@@ -2245,7 +2264,7 @@ const UI = {
     return this.padConfirm();
   },
   padConfirm() {
-    if (performance.now() - this.shownAt < 900) return !!this.screen; // don't let a held dash skip the results
+    if (performance.now() - this.shownAt < 1300) return !!this.screen; // don't let a held dash skip the results
     const map = { menu: 'btnPlay', result: 'btnAgain', partySetup: 'btnPartyGo', partyRound: 'btnNextRound', dailyIntro: 'btnDailyGo', pause: 'btnResume' };
     const id = map[this.screen];
     if (!id) return false;
@@ -2296,7 +2315,8 @@ const UI = {
   },
   // --- locker ----------------------------------------------------------------------
   openLocker() { this.show('locker'); this.renderLocker(); },
-  renderLocker() {
+  renderLocker(preview) {
+    if (!preview) this.pendingBuy = null;
     const S = Save.d, tab = this.lockerTab, tier = rankOf(S.rp).i;
     document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
     const grid = $('grid'); grid.innerHTML = '';
@@ -2318,7 +2338,8 @@ const UI = {
         d.appendChild(cv);
         label = document.createElement('span'); label.textContent = it.name; d.appendChild(label);
         const pr = document.createElement('span'); pr.className = 'price';
-        pr.textContent = owned ? (selected ? 'EQUIPPED' : 'OWNED') : locked ? '🔒 ' + RANKS[it.rank].name : '🪙 ' + it.price;
+        pr.textContent = owned ? (selected ? 'EQUIPPED' : 'OWNED') : locked ? '🔒 ' + RANKS[it.rank].name : preview === k ? 'TAP TO BUY · 🪙 ' + it.price : '🪙 ' + it.price;
+        if (preview === k) d.classList.add('buy');
         d.appendChild(pr);
       }
       if (selected) d.classList.add('sel');
@@ -2326,7 +2347,7 @@ const UI = {
       d.addEventListener('click', () => this.lockerPick(tab, k));
       grid.appendChild(d);
     }
-    paintCreature($('preview'), S.skin, S.hat, ABILITIES[S.ability].icon);
+    if (!preview) paintCreature($('preview'), S.skin, S.hat, ABILITIES[S.ability].icon);
     this.syncCoins();
   },
   lockerPick(tab, k) {
@@ -2339,7 +2360,13 @@ const UI = {
       if (!S.owned[k]) {
         if (it.rank && it.rank > tier) { AU.deny(); this.toast('🔒 Reach ' + RANKS[it.rank].name + ' to buy ' + it.name); return; }
         if (S.coins < it.price) { AU.deny(); this.toast('Need ' + (it.price - S.coins) + ' more 🪙. Win matches and finish missions!'); return; }
-        S.coins -= it.price; S.owned[k] = 1; AU.coin(); this.toast('Bought ' + it.name + '!');
+        if (this.pendingBuy !== k) { // first tap previews, second tap buys
+          this.pendingBuy = k; AU.ui();
+          paintCreature($('preview'), tab === 'skin' ? k : S.skin, tab === 'hat' ? k : S.hat, ABILITIES[S.ability].icon);
+          this.renderLocker(k); return;
+        }
+        S.coins -= it.price; S.owned[k] = 1; AU.win(); this.toast('🎉 New ' + (tab === 'skin' ? 'skin' : 'hat') + ': <b>' + it.name + '</b>!');
+        this.pendingBuy = null;
       }
       if (tab === 'skin') S.skin = k; else S.hat = k;
     }

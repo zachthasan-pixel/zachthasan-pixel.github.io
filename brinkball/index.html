@@ -17,17 +17,18 @@
 
 <!-- In-match HUD -->
 <div id="hud" class="hidden">
-  <div id="left"><span id="leftN">8</span><small>LEFT</small></div>
+  <div id="left"><span id="leftN">8</span><small>LEFT</small><span id="lives" class="hidden"></span></div>
   <div id="modeTag"></div>
   <div id="feed"></div>
   <div id="bigText"></div>
   <div id="hint"></div>
-  <div id="pscore" class="hidden"><span class="p1">P1 <b id="s1">0</b></span><span class="dash">–</span><span class="p2"><b id="s2">0</b> P2</span></div>
+  <div id="pscore" class="hidden"><span class="p1">P1&nbsp;<b id="s1">0</b></span><span class="dash">–</span><span class="p2"><b id="s2">0</b>&nbsp;P2</span></div>
   <div class="abil" id="ab1" data-slot="1"><span class="ico"></span><span class="cd"></span><span class="lbl mouse-only">E</span></div>
 </div>
 
 <!-- touch controls -->
 <div id="touch" class="hidden">
+  <div class="divider"></div>
   <div class="stick" id="stick1"><i></i></div>
   <div class="stick" id="stick2"><i></i></div>
   <button class="tbtn dash" data-slot="1" data-k="dash" aria-label="Dash">DASH</button>
@@ -119,7 +120,8 @@
   <div class="panel">
     <p class="kicker" id="prKicker">ROUND 1</p>
     <p class="place" id="prWho">P1 WINS</p>
-    <div class="score"><span class="p1">P1 <b id="prS1">0</b></span><span>–</span><span class="p2"><b id="prS2">0</b> P2</span></div>
+    <div class="score"><span class="p1">P1&nbsp;<b id="prS1">0</b></span><span>–</span><span class="p2"><b id="prS2">0</b>&nbsp;P2</span></div>
+    <p class="sub" id="prNote"></p>
     <div class="btns">
       <button id="btnNextRound" class="big primary">NEXT ROUND</button>
       <button id="btnPartyQuit" class="mid ghost">MENU</button>

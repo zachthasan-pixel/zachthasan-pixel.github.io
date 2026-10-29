@@ -71,7 +71,7 @@ class Orb {
     const cdMul = (turbo ? 0.5 : 1) * (this.mods.hyper ? 0.5 : 1);
     this.dashCd = Math.max(0, this.dashCd - dt / cdMul);
     this.abCd = Math.max(0, this.abCd - dt);
-    this.spawnT = Math.max(0, this.spawnT - dt);
+    this.spawnT = Math.max(0, this.spawnT - dt); this.guardT = Math.max(0, (this.guardT || 0) - dt);
     this.hitFlash = Math.max(0, this.hitFlash - dt * 4);
     this.squash *= Math.exp(-dt * 10);
     this.emote = Math.max(0, this.emote - dt);

@@ -30,7 +30,7 @@ const R = {
     const portrait = this.h > this.w;
     const padTop = (portrait ? 120 : this.h / this.dpr < 500 ? 46 : 70) * this.dpr, padBot = (Input.touch && portrait ? 190 : this.h / this.dpr < 500 ? 16 : 50) * this.dpr;
     const bw = x1 - x0, bh = (y1 - y0) * SQUASH + TILE_H;
-    let s = Math.min(this.w * 0.94 / bw, (this.h - padTop - padBot) / bh);
+    let s = Math.min(this.w * (portrait ? 1.08 : 0.94) / bw, (this.h - padTop - padBot) / bh);
     s = Math.min(s, 2.2 * this.dpr);
     const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2 + (padBot - padTop) / 2 / (s * SQUASH);
     if (G.camInit) { this.cam.x = cx; this.cam.y = cy; this.cam.s = s; G.camInit = false; return; }
@@ -97,7 +97,7 @@ const R = {
     objs.sort((a, b) => a[0] - b[0]);
     for (const [, k, v] of objs) { if (k === 'o') this.orb(v); else if (k === 'b') this.bumper(v); else this.pickup(v); }
     this.effects(s);
-    for (const o of G.orbs) if (o.alive && !o.falling) this.tag(o);
+    if (G.mode !== 'demo') for (const o of G.orbs) if (o.alive && !o.falling) this.tag(o);
     this.texts();
   },
   hexPath(x, y, k) {
@@ -229,6 +229,10 @@ const R = {
         c.beginPath(); c.ellipse(gx, gy + 2 * s, r * 1.25, r * 0.55, 0, -Math.PI / 2, -Math.PI / 2 + TAU * (ready ? 1 : 1 - o.dashCd / DASH_CD)); c.stroke();
       }
     }
+    if (o.guardT > 0 && !o.falling && Math.floor(o.guardT * 6) % 2 === 0) {
+      c.strokeStyle = 'rgba(255,255,255,0.7)'; c.lineWidth = 2 * this.dpr;
+      c.beginPath(); c.arc(gx, gy - o.r * s * 0.85, r * 1.35, 0, TAU); c.stroke();
+    }
     const cx = gx, cy = gy - o.r * s * 0.85 + drop;
     const sq = o.squash, jit = o.charging > 0 ? rand(-1, 1) * 1.5 * this.dpr * Math.min(1, o.charging / CHARGE_T) : 0;
     c.save(); c.translate(cx + jit, cy); c.scale(1 + sq * 0.22, 1 - sq * 0.18);
@@ -337,7 +341,7 @@ const R = {
     const c = this.c, s = this.cam.s, d = this.dpr;
     const x = this.sx(o.x), y = this.sy(o.y) - o.r * s * 1.85 - (o.hat !== 'none' ? o.r * s * 0.45 : 0) - 6 * d;
     c.textAlign = 'center'; c.textBaseline = 'alphabetic';
-    const fs = Math.round(clamp(12 * s, 10 * d, 15 * d));
+    const fs = Math.round(clamp(13 * s, 11.5 * d, 16 * d));
     // heat %
     const hc = o.heat < 50 ? '#ffffff' : o.heat < 100 ? '#ffc04a' : '#ff5a3a';
     c.font = '900 ' + Math.round(fs * 1.15) + 'px ' + FONT;
@@ -350,7 +354,7 @@ const R = {
       const col = o.slot === 2 ? '#5fb8ff' : '#ffe25a';
       c.strokeText(o.name, x, ny); c.fillStyle = col; c.fillText(o.name, x, ny);
       c.fillStyle = col; c.beginPath(); c.moveTo(x - 6 * d, ny + 3 * d); c.lineTo(x + 6 * d, ny + 3 * d); c.lineTo(x, ny + 9 * d); c.fill();
-    } else if (G.orbs.length <= 9) {
+    } else if (G.alive().length <= 5 || this.w / d > 1100) {
       c.globalAlpha = 0.85;
       c.strokeText(o.name, x, ny); c.fillStyle = '#e8e4ff'; c.fillText(o.name, x, ny);
       c.globalAlpha = 1;

@@ -72,8 +72,12 @@ const G = {
       o.face = Math.atan2(-y, -x);
       this.orbs.push(o);
     }
+    for (const o of this.orbs) o.guardT = 2.6;
+    const rookie = mode === 'royale' && rankOf(S.rp).i === 0 && S.stats.matches < 10;
+    for (const p of this.players) { p.lives = mode === 'tutorial' ? 99 : rookie ? 2 : 1; p.x *= 0.7; p.y *= 0.7; }
+    this.rookie = rookie;
     this.pickupT = this.mods.rain ? 3 : rand(7, 10);
-    this.state = 'countdown'; this.countdown = mode === 'tutorial' ? 0.01 : 1.6;
+    this.state = 'countdown'; this.countdown = mode === 'tutorial' || mode === 'demo' ? 0.01 : 2.4;
     this.camInit = true;
     if (mode !== 'demo') S.arenasSeen[arenaKey] = 1;
     AU.intensity = 0; AU.quiet = mode === 'demo';
@@ -106,7 +110,7 @@ const G = {
       const before = Math.ceil(this.countdown / 0.8);
       this.countdown -= dt;
       const after = Math.ceil(this.countdown / 0.8);
-      if (after !== before && after > 0 && this.mode !== 'demo') { UI.big(after === 2 ? 'READY' : '', '#fff'); AU.count(false); }
+      if (after !== before && after > 0 && this.mode !== 'demo') { UI.big(String(after), '#fff'); AU.count(false); }
       if (this.countdown <= 0) { this.state = 'play'; if (this.mode !== 'demo') { UI.big('GO!', '#ffe25a'); AU.count(true); AU.startMusic(); } }
       Input.apply(this); // let players aim, not move
       for (const o of this.orbs) { o.wantDash = o.wantAbility = false; o.dashHeld = false; o.charging = 0; }
@@ -184,7 +188,7 @@ const G = {
     let heatK = (a.dashing ? 0.6 + ch * 0.3 : 0.3) * (v.heat / 100);
     if (this.mods.heavy) { k += 0.25; heatK *= 1.5; }
     let heatGain = impact < (a.dashing ? 150 : 260) ? 0 : impact * (a.dashing ? 0.02 : 0.008) * (a.power === 'spikes' ? 1.5 : 1) * (this.mods.heavy ? 2 : 1);
-    if (v.anchored) { k = 0; heatK *= 0.1; heatGain = 0; }
+    if (v.anchored || v.guardT > 0) { k = 0; heatK *= 0.1; heatGain = 0; }
     if (v.shieldHits > 0 && impact > 250) {
       v.shieldHits = 0; v.setPower(null); k = 0; heatK *= 0.2; heatGain = 0;
       this.ring(v.x, v.y, v.r, v.r * 2.6, 0.35, POWERUPS.shield.col); AU.bumper();
@@ -351,8 +355,10 @@ const G = {
     const aliveAfter = this.alive().length; // o is already marked falling
     o.place = aliveAfter + 1;
     if (o.human || o.lastHitBy && o.lastHitBy.human) AU.fall();
-    if (this.mode === 'tutorial' && o.human) {
-      UI.feedMsg('<b>Oops!</b> Back you go. Stay away from the edge');
+    if (o.human && o.lives > 1 && this.mode !== 'party') {
+      o.lives--;
+      UI.feedMsg(this.mode === 'tutorial' ? '<b>Oops!</b> Back you go!' : '<b>Rookie bonus:</b> one more life!');
+      o.respawning = true;
       setTimeout(() => this.respawn(o), 900);
       return;
     }
@@ -377,7 +383,7 @@ const G = {
     for (let i = 0; i < 16; i++) this.fx.push({ type: 'p', x: o.x, y: o.y, vx: rand(-160, 160), vy: rand(-160, 160), vz: rand(100, 400), z: 0, life: 0.8, max: 0.8, col: SKINS[o.skin].c1, size: rand(3, 7) });
     // Match flow
     const left = this.alive();
-    if (this.mode === 'tutorial' && !left.includes(this.players[0])) left.push(this.players[0]);
+    if (this.players[0] && this.players[0].respawning && !left.includes(this.players[0])) left.push(this.players[0]);
     if (this.mode === 'demo') {
       if (left.length <= 1 && !this.demoEnd) { this.demoEnd = 1; setTimeout(() => { if (this.mode === 'demo') this.start('demo'); }, 1800); }
       return;
@@ -408,13 +414,14 @@ const G = {
     }
   },
   onEliminated(o) {
-    if (this.mode === 'tutorial' && o.human) o.alive = true; // respawn() brings it back
+    if (o.respawning) o.alive = true; // respawn() brings it back
   },
   respawn(o) {
-    if (this.mode !== 'tutorial' || this.state !== 'play') return;
+    o.respawning = false;
+    if (this.state !== 'play') return;
     const live = this.arena.tiles.filter(t => t.state === 0).sort((a, b) => Math.hypot(a.x, a.y) - Math.hypot(b.x, b.y));
     const t = live[0]; if (!t) return;
-    Object.assign(o, { x: t.x, y: t.y, vx: 0, vy: 0, falling: 0, fz: 0, heat: 0, alive: true, spawnT: 0.6, teeter: 0, lastHitBy: null });
+    Object.assign(o, { x: t.x, y: t.y, vx: 0, vy: 0, falling: 0, fz: 0, heat: 0, alive: true, spawnT: 0.6, guardT: 2, teeter: 0, lastHitBy: null });
     this.ring(o.x, o.y, 4, 70, 0.4, '#ffe25a'); AU.pickup();
   },
   finish() {
@@ -457,12 +464,13 @@ const G = {
     const res = { mode: this.mode, place, n, kos: o.kos, time: o.survived, coins: 0, rp: 0, rpBefore: S.rp, unlocks: [], dailyScore: 0, newBest: false };
     const coinTable = [60, 42, 32, 24, 18, 14, 11, 8];
     res.coins = (coinTable[place - 1] || 8) + o.kos * 8;
-    if (this.mode === 'royale' || this.mode === 'tutorial') {
+    if (this.mode === 'tutorial') { res.rp = 25; S.rp += 25; }
+    if (this.mode === 'royale') {
       const tier = rankOf(S.rp).i;
       const gain = [32, 20, 12, 5, 0, -3, -6, -9][place - 1] || 0;
       res.rp = gain < 0 ? Math.round(gain * clamp(tier / 2, 0, 1.6)) : gain;
       res.rp += o.kos * 3;
-      if (this.mode === 'tutorial') res.rp = Math.max(res.rp, 20);
+      if (tier === 0) res.rp = Math.max(res.rp, 5); // Bronze always moves forward
       const before = rankOf(S.rp);
       S.rp = Math.max(0, S.rp + res.rp);
       const after = rankOf(S.rp);
@@ -492,8 +500,7 @@ const G = {
       if (place === 1) Missions.track('win', 1);
       if (place <= 3) Missions.track('top3', 1);
     }
-    Missions.track('survive', Math.round(o.survived));
-    S.stats.kos += o.kos;
+    if (this.mode !== 'tutorial') { Missions.track('survive', Math.round(o.survived)); S.stats.kos += o.kos; }
     S.coins += res.coins;
     Save.write();
     return res;
@@ -528,6 +535,7 @@ const Missions = {
     return def.text.replace('{n}', m.n).replace('{es}', m.n === 1 ? '' : 'es').replace('{s}', m.n === 1 ? '' : 's');
   },
   track(id, amt) {
+    if (G.mode === 'tutorial' || G.mode === 'demo') return;
     const M = this.ensure();
     for (const m of M.list) {
       if (m.id !== id || m.done) continue;
