@@ -6,7 +6,7 @@
 
 | What | Where |
 |---|---|
-| The full kit: builds, covers, videos, screenshots, these guides | **Brinkball-submission-kit-2026-10-29.zip** in your Higgsfield library (link in Claude's message) |
+| The full kit: builds, covers, videos, screenshots, these guides | **Brinkball-submission-kit-2026-10-29.zip** (30 MB): https://d2ol7oe51mr4n9.cloudfront.net/user_3GeIkAZGWco0bRor30I4Kly3Yex/658d6460-7ad5-4e0f-84d4-7cdc5d2e71d5.zip |
 | Game on your site (after the pull request is merged) | https://drzahirhasan.com/brinkball/ |
 | Source and builds | `brinkball/` in the website repository; `./build.sh` rebuilds everything |
 
