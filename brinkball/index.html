@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Brinkball</title>
+<meta name="description" content="Shove, dash and bonk your rivals off a crumbling floating arena. Last one standing wins. Solo against CPU rivals or 2 players on one device.">
+<meta name="theme-color" content="#28215a">
+<meta property="og:title" content="Brinkball">
+<meta property="og:description" content="Shove them over the brink. A physics knockout brawler for 1 or 2 players.">
+<meta property="og:image" content="og-1200x630.png">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="cv" tabindex="0" aria-label="Brinkball game"></canvas>
+
+<!-- In-match HUD -->
+<div id="hud" class="hidden">
+  <div id="left"><span id="leftN">8</span><small>LEFT</small><span id="lives" class="hidden"></span></div>
+  <div id="modeTag"></div>
+  <div id="feed"></div>
+  <div id="bigText"></div>
+  <div id="hint"></div>
+  <div id="pscore" class="hidden"><span class="p1">P1&nbsp;<b id="s1">0</b></span><span class="dash">–</span><span class="p2"><b id="s2">0</b>&nbsp;P2</span></div>
+  <div class="abil" id="ab1" data-slot="1"><span class="ico"></span><span class="cd"></span><span class="lbl mouse-only">E</span></div>
+</div>
+
+<!-- touch controls -->
+<div id="touch" class="hidden">
+  <div class="divider"></div>
+  <div class="stick" id="stick1"><i></i></div>
+  <div class="stick" id="stick2"><i></i></div>
+  <button class="tbtn dash" data-slot="1" data-k="dash" aria-label="Dash">DASH</button>
+  <button class="tbtn ab" data-slot="1" data-k="ab" aria-label="Ability"><span></span></button>
+  <button class="tbtn dash p2" data-slot="2" data-k="dash" aria-label="Player 2 dash">DASH</button>
+  <button class="tbtn ab p2" data-slot="2" data-k="ab" aria-label="Player 2 ability"><span></span></button>
+</div>
+
+<div id="corner">
+  <button id="btnMute" aria-label="Mute"><svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="wave" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="x" d="M16 9l6 6M22 9l-6 6"/></svg></button>
+  <button id="btnPause" class="hidden" aria-label="Pause"><svg viewBox="0 0 24 24"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg></button>
+</div>
+
+<!-- Main menu -->
+<div id="menu" class="screen hidden">
+  <div class="topbar">
+    <div class="rankchip" id="rankChip"><span class="rk"></span><div class="bar"><i></i></div><small></small></div>
+    <div class="coins" id="coins">🪙 <b>0</b></div>
+  </div>
+  <div class="menuMain">
+    <h1 class="logo"><span>BRINK</span><span>BALL</span></h1>
+    <p class="tag">Shove them over the brink.</p>
+    <button id="btnPlay" class="big primary">PLAY<small>Solo vs 7 CPU rivals</small></button>
+    <div class="row">
+      <button id="btnParty" class="mid blue">2 PLAYERS<small>same device</small></button>
+      <button id="btnDaily" class="mid daily">DAILY<small id="dailySub">challenge</small></button>
+    </div>
+    <div class="row">
+      <button id="btnLocker" class="mid ghost">🎩 LOCKER</button>
+      <button id="btnGift" class="mid ghost hidden">🎁 DAILY GIFT</button>
+    </div>
+  </div>
+  <div class="missions" id="missions"></div>
+</div>
+
+<!-- Locker: skins, hats, abilities -->
+<div id="locker" class="screen hidden">
+  <div class="topbar">
+    <button class="back" id="lockerBack">‹ BACK</button>
+    <div class="coins">🪙 <b>0</b></div>
+  </div>
+  <div class="lockerBody">
+    <canvas id="preview" width="220" height="220"></canvas>
+    <div class="tabs"><button data-tab="skin" class="on">SKINS</button><button data-tab="hat">HATS</button><button data-tab="ability">ABILITY</button></div>
+    <div class="grid" id="grid"></div>
+    <p class="note" id="lockerNote"></p>
+  </div>
+</div>
+
+<!-- Results -->
+<div id="result" class="screen dim hidden">
+  <div class="panel">
+    <p class="kicker" id="rKicker">ROYALE</p>
+    <p class="place" id="rPlace">#1</p>
+    <p class="sub" id="rSub"></p>
+    <div class="stats">
+      <div><b id="rKos">0</b><small>KOs</small></div>
+      <div><b id="rTime">0s</b><small>survived</small></div>
+      <div><b id="rCoins">+0</b><small>coins</small></div>
+    </div>
+    <div class="rankrow" id="rRank"><span class="rk"></span><div class="bar"><i></i></div><span class="delta"></span></div>
+    <div id="rUnlocks"></div>
+    <div class="btns">
+      <button id="btnAgain" class="big primary">PLAY AGAIN</button>
+      <button id="btnDouble" class="mid reward hidden">🎬 DOUBLE COINS</button>
+      <button id="btnHome" class="mid ghost">MENU</button>
+    </div>
+  </div>
+</div>
+
+<!-- Party setup and round results -->
+<div id="partySetup" class="screen dim hidden">
+  <div class="panel">
+    <p class="kicker">2 PLAYERS · SAME DEVICE</p>
+    <h2>First to 3 round wins</h2>
+    <div class="ctrls">
+      <div class="pc p1"><b>PLAYER 1</b><span class="mouse-only">Move <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><br>Dash <kbd>Space</kbd> (hold to charge)<br>Ability <kbd>E</kbd></span><span class="touch-only">Left half of the screen</span><span class="padnote">or gamepad 1</span></div>
+      <div class="pc p2"><b>PLAYER 2</b><span class="mouse-only">Move <kbd>←</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>→</kbd><br>Dash <kbd>Enter</kbd> (hold to charge)<br>Ability <kbd>Right Shift</kbd></span><span class="touch-only">Right half of the screen</span><span class="padnote">or gamepad 2</span></div>
+    </div>
+    <p class="lbl">CPU rivals in the arena</p>
+    <div class="seg" id="botSeg"><button data-n="0">None</button><button data-n="2">2</button><button data-n="4">4</button></div>
+    <div class="btns">
+      <button id="btnPartyGo" class="big primary">START</button>
+      <button id="btnPartyBack" class="mid ghost">BACK</button>
+    </div>
+  </div>
+</div>
+<div id="partyRound" class="screen dim hidden">
+  <div class="panel">
+    <p class="kicker" id="prKicker">ROUND 1</p>
+    <p class="place" id="prWho">P1 WINS</p>
+    <div class="score"><span class="p1">P1&nbsp;<b id="prS1">0</b></span><span>–</span><span class="p2"><b id="prS2">0</b>&nbsp;P2</span></div>
+    <p class="sub" id="prNote"></p>
+    <div class="btns">
+      <button id="btnNextRound" class="big primary">NEXT ROUND</button>
+      <button id="btnPartyQuit" class="mid ghost">MENU</button>
+    </div>
+  </div>
+</div>
+
+<!-- Daily challenge intro -->
+<div id="dailyIntro" class="screen dim hidden">
+  <div class="panel">
+    <p class="kicker">DAILY CHALLENGE · <span id="dDate"></span></p>
+    <h2 id="dMod">Giants</h2>
+    <p class="sub" id="dModDesc"></p>
+    <p class="sub" id="dArena"></p>
+    <div class="stats">
+      <div><b id="dBest">0</b><small>today's best</small></div>
+      <div><b id="dStreak">0</b><small>day streak</small></div>
+    </div>
+    <p class="note">Same arena and twist for everyone today. First result each day pays a streak bonus.</p>
+    <div class="btns">
+      <button id="btnDailyGo" class="big primary">PLAY</button>
+      <button id="btnDailyBack" class="mid ghost">BACK</button>
+    </div>
+  </div>
+</div>
+
+<div id="pause" class="screen dim hidden">
+  <div class="panel">
+    <h2>PAUSED</h2>
+    <div class="btns">
+      <button id="btnResume" class="big primary">RESUME</button>
+      <button id="btnMusic" class="mid ghost">MUSIC: ON</button>
+      <button id="btnQuit" class="mid ghost">QUIT TO MENU</button>
+    </div>
+    <p class="note mouse-only">Move WASD / arrows / mouse · Dash Space or click (hold to charge) · Ability E or right-click</p>
+  </div>
+</div>
+
+<div id="toast"></div>
+<noscript>Brinkball needs JavaScript to run.</noscript>
+<script src="game.js"></script>
+</body>
+</html>
