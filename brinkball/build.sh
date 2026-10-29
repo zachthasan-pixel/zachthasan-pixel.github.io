@@ -5,7 +5,8 @@
 #
 # Outputs
 #   game.js                        web build (this site + itch.io), no ads
-#   brinkball-itch.zip             itch.io "played in the browser" upload
+#   brinkball-browser.zip          itch.io "played in the browser" upload
+#   brinkball-download.zip         itch.io offline download (adds README.txt, LICENSE.txt)
 #   brinkball-crazygames.zip       CrazyGames upload (CrazyGames SDK v3, no rewarded ads)
 #   brinkball-poki.zip             Poki for Developers upload (Poki SDK v2)
 set -e
@@ -27,8 +28,16 @@ bundle web game.js
 echo "built game.js ($(wc -c < game.js) bytes)"
 
 FILES="index.html game.js style.css favicon.svg"
-rm -f brinkball-itch.zip brinkball-crazygames.zip brinkball-poki.zip
-zip -q -X brinkball-itch.zip $FILES
+rm -f brinkball-browser.zip brinkball-download.zip brinkball-crazygames.zip brinkball-poki.zip
+zip -q -X brinkball-browser.zip $FILES
+tmp=$(mktemp -d)
+mkdir "$tmp/brinkball"
+cp $FILES "$tmp/brinkball/"
+cp README-download.txt "$tmp/brinkball/README.txt"
+cp LICENSE-download.txt "$tmp/brinkball/LICENSE.txt"
+(cd "$tmp" && zip -q -X -r brinkball-download.zip brinkball)
+mv "$tmp/brinkball-download.zip" .
+rm -r "$tmp"
 
 # Portal packages: same game, the portal's SDK loaded in <head> before game.js.
 portal() { # $1 = portal name, $2 = SDK script URL
@@ -43,4 +52,4 @@ portal() { # $1 = portal name, $2 = SDK script URL
 }
 portal crazygames https://sdk.crazygames.com/crazygames-sdk-v3.js
 portal poki https://game-cdn.poki.com/scripts/v2/poki-sdk.js
-echo "packaged brinkball-itch.zip, brinkball-crazygames.zip, brinkball-poki.zip"
+echo "packaged brinkball-browser.zip, brinkball-download.zip, brinkball-crazygames.zip, brinkball-poki.zip"
