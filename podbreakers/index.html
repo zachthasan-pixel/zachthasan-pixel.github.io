@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Pod Breakers</title>
+<meta name="description" content="Smash the alien pods before they hatch and save the last shield on Earth. A free 3D browser shooter for computer and phone.">
+<style>
+@font-face{font-family:'Russo';src:url('russo-one.woff2') format('woff2');font-display:block}
+:root{--cy:#3ff0ff;--or:#ff9a2e;--mg:#ff3fa4;--lime:#a6ff3a;--bg:#0b0e1f;--card:#141a35;--txt:#eef3ff}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:#05060d;color:var(--txt);font-family:'Russo',system-ui,sans-serif;user-select:none;-webkit-user-select:none;touch-action:none;overscroll-behavior:none}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block}
+.hidden{display:none!important}
+.layer{position:fixed;inset:0;pointer-events:none}
+.layer.on{pointer-events:auto}
+/* loading */
+#loading{position:fixed;inset:0;background:#05060d url('menu_bg.jpg') center/cover;display:flex;align-items:flex-end;justify-content:center;z-index:50}
+#loading .bar{width:min(60vw,420px);height:10px;border-radius:6px;background:#0008;margin-bottom:10vh;overflow:hidden;border:1px solid #fff4}
+#loading .fill{height:100%;width:5%;background:linear-gradient(90deg,var(--cy),var(--or))}
+/* HUD */
+#hud{font-size:clamp(13px,1.6vmin + 5px,21px)}
+#flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:15;transition:opacity .5s}
+#stickGhost{position:absolute;left:28px;bottom:34px;width:120px;height:120px;border-radius:50%;border:2px dashed #ffffff55;display:flex;align-items:center;justify-content:center;font-size:13px;color:#ffffffaa}
+#autoTag{font-size:.72em;color:var(--cy);opacity:.9}
+.bars{position:absolute;left:12px;top:10px;width:min(34vw,300px)}
+.bar2{height:clamp(12px,2.2vmin,18px);background:#0009;border:1px solid #fff3;border-radius:9px;overflow:hidden;position:relative;margin-bottom:6px}
+.bar2 i{display:block;height:100%;width:100%;transition:width .12s}
+.bar2 b{position:absolute;inset:0;font-weight:400;font-size:max(.78em,11px);line-height:clamp(12px,2.2vmin,18px);padding-left:8px;text-shadow:0 1px 2px #000;white-space:nowrap}
+#hpFill{background:linear-gradient(90deg,#ff4d6d,#ff9a2e)}
+#genFill{background:linear-gradient(90deg,#20b8ff,var(--cy))}
+.topc{position:absolute;left:50%;top:8px;transform:translateX(-50%);text-align:center;text-shadow:0 2px 4px #000}
+#waveTxt{font-size:1.25em;letter-spacing:.06em}
+#waveSub{font-size:.7em;opacity:.85}
+.topr{position:absolute;right:12px;top:10px;text-align:right;text-shadow:0 2px 4px #000;line-height:1.35}
+#coresTxt{color:var(--lime)}
+#xpWrap{position:absolute;left:0;right:0;bottom:0;height:7px;background:#0008}
+#xpFill{height:100%;width:0;background:linear-gradient(90deg,var(--mg),#c46bff)}
+#lvlTxt{position:absolute;left:12px;bottom:12px;font-size:.8em;text-shadow:0 1px 3px #000}
+#combo{position:absolute;right:14px;top:28%;text-align:right;font-size:1.6em;color:var(--or);text-shadow:0 0 12px #f80a,0 2px 3px #000;opacity:0;transition:opacity .2s}
+#toasts{position:absolute;left:50%;top:22%;transform:translateX(-50%);text-align:center;width:90vw}
+.toast{font-size:clamp(18px,4vmin,38px);letter-spacing:.05em;text-shadow:0 0 18px currentColor,0 3px 4px #000;animation:pop 1.6s ease-out forwards}
+@keyframes pop{0%{transform:scale(.4);opacity:0}12%{transform:scale(1.12);opacity:1}25%{transform:scale(1)}80%{opacity:1}100%{opacity:0;transform:translateY(-20px)}}
+#hint{position:absolute;left:50%;top:12%;transform:translateX(-50%);background:#0b1030e6;border:2px solid var(--cy);border-radius:12px;padding:.55em 1.1em;font-size:clamp(13px,2.6vmin,22px);text-align:center;max-width:88vw;box-shadow:0 0 24px #3ff0ff55}
+#alert{position:absolute;left:50%;top:9.5%;transform:translateX(-50%);color:#ff5a6e;font-size:.9em;text-shadow:0 0 10px #f00,0 2px 3px #000;animation:blink .5s infinite alternate}
+@keyframes blink{from{opacity:1}to{opacity:.35}}
+#arrows .arw{position:absolute;width:34px;height:34px;margin:-17px 0 0 -17px}
+#build{position:absolute;left:50%;bottom:16%;transform:translateX(-50%);text-align:center;font-size:.9em;text-shadow:0 2px 3px #000}
+#build .ring{width:120px;height:8px;background:#0008;border-radius:4px;margin:6px auto 0;overflow:hidden}
+#build .ring i{display:block;height:100%;width:0;background:var(--lime)}
+#keys{position:absolute;right:12px;bottom:16px;text-align:right;font-size:.7em;opacity:.8;text-shadow:0 1px 2px #000;line-height:1.5}
+#abil{position:absolute;right:12px;bottom:70px;display:flex;gap:10px}
+.ab{width:clamp(54px,8vmin,72px);height:clamp(54px,8vmin,72px);border-radius:50%;border:2px solid #fff6;background:#0b1030cc;display:flex;align-items:center;justify-content:center;flex-direction:column;font-size:.62em;position:relative;overflow:hidden}
+.ab .cd{position:absolute;left:0;right:0;bottom:0;background:#3ff0ff44}
+.ab span{position:relative}
+.ab.ready{border-color:var(--cy);box-shadow:0 0 14px #3ff0ffaa}
+#abStrike.ready{border-color:var(--or);box-shadow:0 0 18px #ff9a2ecc}
+#abStrike .cd{background:#ff9a2e55}
+/* touch */
+#touch .stick{position:absolute;width:130px;height:130px;border-radius:50%;border:2px solid #fff4;background:#ffffff10;display:none}
+#touch .knob{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px;border-radius:50%;background:#ffffff40;border:2px solid #fff8}
+#touch .tb{position:absolute;width:86px;height:86px;border-radius:50%;border:3px solid #fff8;background:#0b1030b0;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.15;font-size:14px;pointer-events:auto}
+#tDash{right:20px;bottom:24px}
+#tStrike{right:118px;bottom:40px;border-color:var(--or)}
+#touch #tPause{right:12px;top:58px;bottom:auto;width:48px;height:48px;font-size:16px}
+/* screens */
+.screen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:20;pointer-events:auto}
+.dim{background:radial-gradient(ellipse at center,#0b0e1fcc,#05060df2)}
+.panel{background:var(--card);border:2px solid #3ff0ff55;border-radius:18px;padding:clamp(12px,2.5vmin,26px);max-width:min(94vw,980px);max-height:92vh;overflow:auto;box-shadow:0 10px 40px #000a;text-align:center}
+h1,h2,h3{margin:.2em 0;font-weight:400}
+.btn{font-family:inherit;font-size:clamp(14px,2.4vmin,20px);color:#fff;background:linear-gradient(180deg,#2a3672,#1a2250);border:2px solid #5a6cc0;border-radius:12px;padding:.6em 1.3em;margin:.3em;cursor:pointer;letter-spacing:.04em}
+.btn:hover{filter:brightness(1.25)}
+.btn.big{font-size:clamp(20px,4vmin,34px);padding:.5em 2em;background:linear-gradient(180deg,#ff9a2e,#e5571c);border-color:#ffd08a;box-shadow:0 0 24px #ff7a2e88}
+.btn.sm{font-size:clamp(12px,1.9vmin,16px);padding:.45em .9em}
+.btn:disabled{opacity:.45;filter:grayscale(1);cursor:default}
+/* menu */
+#menu{background:#05060d url('menu_bg.jpg') center/cover}
+#menu .shade{position:absolute;inset:0;background:linear-gradient(90deg,#05060dee 0%,#05060daa 45%,#05060d22 75%)}
+#menu .col{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:.4em;margin-right:auto;margin-left:max(4vw,16px);max-width:min(560px,92vw)}
+.logo{font-size:clamp(40px,10vmin,96px);line-height:.9;letter-spacing:.02em;background:linear-gradient(180deg,#fff 10%,#3ff0ff 55%,#1b7cff);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 4px 0 #0b1a5a) drop-shadow(0 0 22px #3ff0ff88);transform:skewX(-8deg)}
+.logo span{background:linear-gradient(180deg,#fff 10%,#ff9a2e 55%,#ff3f6a);-webkit-background-clip:text;background-clip:text}
+.tag{font-size:clamp(12px,2.2vmin,18px);opacity:.9;margin-bottom:.4em}
+.row{display:flex;flex-wrap:wrap;gap:.3em;align-items:center}
+.chip{background:#0b1030cc;border:1px solid #fff3;border-radius:10px;padding:.35em .7em;font-size:clamp(11px,1.9vmin,15px)}
+#zoneSel{display:flex;gap:.4em;align-items:center}
+#dailyBox{background:#0b1030dd;border:1px solid var(--or);border-radius:12px;padding:.5em .8em;font-size:clamp(11px,1.9vmin,15px);max-width:100%}
+/* cards */
+#cards .wrap{display:flex;gap:clamp(8px,2vmin,20px);flex-wrap:wrap;justify-content:center}
+.card{width:clamp(150px,26vmin,230px);min-height:clamp(190px,34vmin,290px);background:linear-gradient(180deg,#1d2550,#10142e);border:3px solid #5a6cc0;border-radius:16px;padding:14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:transform .12s}
+.card:hover{transform:translateY(-6px) scale(1.03)}
+.card .ic{font-size:clamp(34px,7vmin,56px)}
+.card .nm{font-size:clamp(14px,2.6vmin,21px)}
+.card .ds{font-size:clamp(11px,1.9vmin,15px);opacity:.88;line-height:1.3}
+.card .rr{font-size:11px;letter-spacing:.15em;opacity:.8}
+.card.rare{border-color:#3ff0ff;box-shadow:0 0 18px #3ff0ff55}
+.card.epic{border-color:#ff3fa4;box-shadow:0 0 22px #ff3fa477}
+.card .key{font-size:11px;opacity:.6}
+/* lists */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,210px),1fr));gap:10px;text-align:left}
+.item{background:#0b1030;border:1px solid #fff2;border-radius:12px;padding:10px;font-size:clamp(11px,1.8vmin,14px)}
+.item h3{font-size:1.15em}
+.pips{display:flex;gap:3px;margin:5px 0}
+.pips i{flex:1;height:6px;border-radius:3px;background:#fff2}
+.pips i.on{background:var(--cy)}
+.dex{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(46%,180px),1fr));gap:10px}
+.dex .item img{width:100%;border-radius:10px;display:block}
+.dex .lock img{filter:blur(10px) brightness(.3) saturate(.4)}
+.tabs{display:flex;gap:6px;justify-content:center;margin-bottom:10px;flex-wrap:wrap}
+.tab.on{border-color:var(--or);background:linear-gradient(180deg,#5a3a1a,#3a220e)}
+.stat{display:flex;justify-content:space-between;gap:20px;font-size:clamp(12px,2vmin,17px);padding:2px 0}
+.cr{color:#ffd23f}
+.closeX{position:sticky;top:0;float:right}
+@media (max-height:480px){#touch .tb{width:66px;height:66px;font-size:12px}#tStrike{right:94px;bottom:30px}.logo{font-size:13vh;line-height:.85}.tag{display:none}#menu .col{max-height:100vh;overflow:auto;padding:6px 0}#dailyBox{font-size:11px;padding:.3em .6em}#menu .btn.big{font-size:22px;padding:.3em 1.6em}#menu .btn{padding:.4em .9em}.panel{padding:10px}.card{min-height:150px;padding:8px}.card .ic{font-size:30px}#menu .col{gap:.2em}}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="flash"></div>
+<script>
+(function(){function fail(){var l=document.getElementById('loading');if(l&&l.style.display!=='none'){l.innerHTML='<div style="margin-bottom:12vh;background:#0b1030ee;border:2px solid #3ff0ff;border-radius:14px;padding:14px 26px;font-size:20px;cursor:pointer">Loading failed. Tap to retry</div>';l.onclick=function(){location.reload();};}}
+window.addEventListener('error',function(e){if(e.target&&e.target.tagName==='SCRIPT')fail();else if(!window.PB||!PB.Game||!PB.UI)fail();},true);
+setTimeout(fail,20000);})();
+</script>
+<div id="loading"><div class="bar"><div class="fill" id="loadFill"></div></div></div>
+
+<div id="hud" class="layer hidden">
+  <div class="bars">
+    <div class="bar2"><i id="hpFill"></i><b id="hpTxt">DEFENDER</b></div>
+    <div class="bar2"><i id="genFill"></i><b id="genTxt">SHIELD GENERATOR</b></div>
+  </div>
+  <div class="topc"><div id="waveTxt">WAVE 1</div><div id="waveSub"></div></div>
+  <div class="topr"><div id="scoreTxt">0</div><div id="coresTxt">◆ 0</div><div id="autoTag"></div></div>
+  <div id="alert" class="hidden">⚠ GENERATOR UNDER ATTACK</div>
+  <div id="combo"></div>
+  <div id="toasts"></div>
+  <div id="hint" class="hidden"></div>
+  <div id="arrows"></div>
+  <div id="build" class="hidden"><div id="buildTxt"></div><div class="ring"><i id="buildFill"></i></div></div>
+  <div id="abil"><div class="ab" id="abDash"><div class="cd"></div><span>DASH</span><span id="kDash">SPACE</span></div><div class="ab" id="abStrike"><div class="cd"></div><span>STRIKE</span><span id="kStrike">E</span></div></div>
+  <div id="keys"></div>
+  <div id="lvlTxt">LV 1</div>
+  <div id="xpWrap"><div id="xpFill"></div></div>
+</div>
+
+<div id="touch" class="layer hidden">
+  <div id="stickGhost">◀ MOVE ▶</div>
+  <div class="stick" id="stickL"><div class="knob"></div></div>
+  <div class="tb" id="tDash">DASH</div>
+  <div class="tb" id="tStrike">STRIKE</div>
+  <div class="tb" id="tPause">II</div>
+</div>
+
+<div id="menu" class="screen hidden"><div class="shade"></div>
+  <div class="col">
+    <div class="logo">POD<br><span>BREAKERS</span></div>
+    <div class="tag">Smash the alien pods. Save the last shield on Earth.</div>
+    <div class="row"><span class="chip" id="mRank"></span><span class="chip cr" id="mCredits"></span></div>
+    <div id="zoneSel"><button class="btn sm" id="zPrev">◀</button><span class="chip" id="zoneName" style="min-width:12em;text-align:center"></span><button class="btn sm" id="zNext">▶</button></div>
+    <button class="btn big" id="bPlay">PLAY</button>
+    <div class="row"><button class="btn" id="bArmory">ARMORY</button><button class="btn" id="bDex">XENODEX</button><button class="btn" id="bMissions">MISSIONS</button><button class="btn sm" id="bSettings">⚙</button></div>
+    <div id="dailyBox"></div>
+  </div>
+</div>
+
+<div id="cards" class="screen dim hidden"><div><h2 style="text-align:center;text-shadow:0 0 14px #c46bff">LEVEL UP! CHOOSE AN UPGRADE</h2><div class="wrap" id="cardWrap"></div></div></div>
+
+<div id="pause" class="screen dim hidden"><div class="panel"><h2>PAUSED</h2><div id="pauseInfo" style="font-size:clamp(11px,1.9vmin,15px);opacity:.9;margin:8px 0;line-height:1.6"></div>
+  <button class="btn big" id="bResume">RESUME</button><br><button class="btn" id="bMute">SOUND: ON</button><button class="btn" id="bMusic">MUSIC: ON</button><button class="btn" id="bQuit">QUIT RUN</button></div></div>
+
+<div id="over" class="screen dim hidden"><div class="panel" style="min-width:min(90vw,440px)"><h2 id="overTitle">DEFENSE FALLEN</h2><div id="overStats"></div>
+  <button class="btn big" id="bAgain">PLAY AGAIN</button><br>
+  <div id="reviveRow" class="hidden"></div><button class="btn" id="bOverArmory">ARMORY</button><button class="btn" id="bMenu">MENU</button></div></div>
+
+<div id="modal" class="screen dim hidden"><div class="panel" style="width:min(94vw,980px)"><button class="btn sm closeX" id="bClose">✕</button><div id="modalBody"></div></div></div>
+
+<script src="three.min.js"></script>
+<script src="platform.js"></script>
+<script src="core.js"></script>
+<script src="audio.js"></script>
+<script src="world.js"></script>
+<script src="entities.js"></script>
+<script src="ui.js"></script>
+<script src="game.js"></script>
+<script src="main.js"></script>
+</body>
+</html>
