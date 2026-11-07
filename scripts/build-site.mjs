@@ -94,6 +94,7 @@ function shellTop({ active, depth = 0, title, description, url, image, jsonld, t
     ...ORDER.map((k) => [SECTIONS[k].page, SECTIONS[k].nav.replace("&", "&amp;")]),
     ["apps.html", "Apps"],
     ["about.html", "About"],
+    ["search.html", "Search"],
   ];
   return `<!DOCTYPE html>
 <html lang="en">
