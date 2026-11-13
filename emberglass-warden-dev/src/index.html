@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Emberglass Warden</title>
+<link rel="stylesheet" href="style.css">
+<!--SDK-->
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div id="hud" class="hidden">
+  <div id="bars" class="panel">
+    <div class="lbl">INTEGRITY <span id="hpv"></span></div><div class="bar hp"><i id="hpf"></i></div>
+    <div class="lbl">ENERGY</div><div class="bar en"><i id="enf"></i></div>
+    <div id="dashpips"></div>
+  </div>
+  <div id="waveBox" class="panel"><div id="waveN">WAVE 1</div><div id="left"></div></div>
+  <div id="scoreBox"><div id="score">0</div><div id="combo"></div><div id="shards">◆ 0</div></div>
+  <div id="burstBox"><div class="bar burst"><i id="buf"></i></div><div id="burstLbl">RIFT BURST</div></div>
+  <div id="bossBar" class="hidden"><span id="bossName">RIFT TYRANT</span><div class="bar boss"><i id="bossf"></i></div></div>
+  <div id="cross"></div>
+  <div id="banner"></div>
+  <div id="vignette"></div>
+  <div id="nums"></div>
+  <button id="pauseBtn" aria-label="Pause">II</button>
+</div>
+<div id="hint" class="hidden"></div>
+
+<div id="touchUI">
+  <div id="joy"><div id="nub"></div></div>
+  <button id="tAtk" class="tb">SLASH</button>
+  <button id="tBlk" class="tb">BLOCK</button>
+  <button id="tDash" class="tb">DASH</button>
+  <button id="tBurst" class="tb">BURST</button>
+</div>
+
+<div id="loading" class="screen"><div class="card0"><h1>EMBERGLASS<br><em>WARDEN</em></h1><div class="bar load"><i id="loadFill"></i></div><p>Forging the blade…</p></div></div>
+
+<div id="menu" class="screen hidden"><div class="card0">
+  <h1>EMBERGLASS<br><em>WARDEN</em></h1>
+  <div id="mStats" class="stats"></div>
+  <button id="playBtn" class="big">PLAY</button>
+  <button id="dailyBtn" class="daily"></button>
+  <div class="row"><button id="armBtn">ARMORY</button><button id="muteBtn">Sound: ON</button></div>
+  <div id="blades"></div><div id="bladeName"></div>
+</div></div>
+
+<div id="upg" class="screen hidden"><div class="wide">
+  <h2 id="upgTitle">CHOOSE AN UPGRADE</h2>
+  <div id="cards"></div>
+  <button id="reroll" class="hidden">Reroll</button>
+</div></div>
+
+<div id="pause" class="screen hidden"><div class="card0">
+  <h2>PAUSED</h2>
+  <button id="resumeBtn" class="big">RESUME</button>
+  <label class="slider">Look sensitivity <input id="sens" type="range" min="0.4" max="2.2" step="0.1" value="1"></label>
+  <div class="row"><button id="muteBtn2">Sound: ON</button><button id="quitBtn">END RUN</button></div>
+  <p class="keys">Slash: Left-Click · Heavy: hold Left-Click · Block / Parry: Right-Click<br>Dash: Space · Rift Burst: E · Pause: P · Mute: M</p>
+</div></div>
+
+<div id="over" class="screen hidden"><div class="card0">
+  <h2>THE WARDEN FALLS</h2>
+  <div id="overStats" class="grid"></div>
+  <div id="overRank"></div>
+  <button id="againBtn" class="big">FIGHT AGAIN</button>
+  <button id="menuBtn">MENU &amp; ARMORY</button>
+</div></div>
+
+<div id="armory" class="screen hidden"><div class="card0">
+  <h2>ARMORY <span id="armShards"></span></h2>
+  <div id="armList"></div>
+  <button id="armBack">BACK</button>
+</div></div>
+
+<!--ASSETS-->
+<script src="game.js"></script>
+</body>
+</html>
