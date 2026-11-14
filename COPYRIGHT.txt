@@ -1,0 +1,9 @@
+Copyright (c) 2026 Zahir Hasan. All rights reserved.
+
+The books, covers, text, artwork, games and site design in this repository
+belong to Zahir Hasan and Maple & Pine Press, Tokyo, unless a file says
+otherwise. They may not be copied, republished or sold without written
+permission.
+
+Third-party fonts and software libraries included here remain under their own
+licences, which are kept alongside them.
