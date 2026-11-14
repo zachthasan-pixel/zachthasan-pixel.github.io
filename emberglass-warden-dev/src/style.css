@@ -63,7 +63,7 @@ h2{font-size:calc(var(--u)*1.7);letter-spacing:.08em;color:var(--ac)}
 #burstBox.ready #burstLbl{color:#fff;animation:pulse .6s infinite}#burstBox.ready .bar{box-shadow:0 0 calc(var(--u)*1) #c08aff}
 #bossBar{position:absolute;left:50%;top:calc(var(--u)*6.4);transform:translateX(-50%);width:min(60vw,calc(var(--u)*34));text-align:center;font-weight:700;letter-spacing:.14em;font-size:calc(var(--u)*.95);color:#e0c8ff;text-shadow:0 2px 6px #000}
 #cross{position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px;border-radius:50%;background:#fffc;box-shadow:0 0 4px #000}
-#banner{position:absolute;left:0;right:0;top:24%;text-align:center;opacity:0;text-shadow:0 0 calc(var(--u)*1.2) #000,0 2px 4px #000}
+#banner{position:absolute;left:0;right:0;top:32%;text-align:center;opacity:0;text-shadow:0 0 calc(var(--u)*1.2) #000,0 2px 4px #000}
 #banner b{display:block;font-size:calc(var(--u)*3.2);letter-spacing:.1em;color:#fff}#banner span{font-size:calc(var(--u)*1.2);color:var(--cy)}
 #banner.go{animation:ban 2s ease-out forwards}
 @keyframes ban{0%{opacity:0;transform:scale(1.25)}12%{opacity:1;transform:scale(1)}80%{opacity:1}100%{opacity:0}}
@@ -75,7 +75,7 @@ h2{font-size:calc(var(--u)*1.7);letter-spacing:.08em;color:var(--ac)}
 .num.big{font-size:calc(var(--u)*1.9);color:#ffb45a}.num.dim{color:#9aa4c4;font-size:calc(var(--u)*.95)}.num.gold{color:#ffe48a;font-size:calc(var(--u)*1.8)}
 .num.pop{animation:nm .7s ease-out forwards}
 @keyframes nm{0%{opacity:1;margin-top:0}100%{opacity:0;margin-top:calc(var(--u)*-4)}}
-#hint{position:fixed;left:50%;top:15%;transform:translateX(-50%);z-index:12;background:#060a1ce6;border:1px solid var(--ac);border-radius:calc(var(--u)*.7);padding:calc(var(--u)*.6) calc(var(--u)*1.2);font-size:calc(var(--u)*1.1);max-width:92vw;text-align:center;pointer-events:none}
+#hint{position:fixed;left:50%;top:calc(var(--u)*9.4);transform:translateX(-50%);z-index:12;background:#060a1ce6;border:1px solid var(--ac);border-radius:calc(var(--u)*.7);padding:calc(var(--u)*.6) calc(var(--u)*1.2);font-size:calc(var(--u)*1.1);max-width:92vw;text-align:center;pointer-events:none}
 #hint b{color:var(--ac)}
 #pauseBtn{position:absolute;right:calc(var(--u)*1);top:calc(var(--u)*6.6);pointer-events:auto;padding:.3em .7em;display:none}
 /* touch */

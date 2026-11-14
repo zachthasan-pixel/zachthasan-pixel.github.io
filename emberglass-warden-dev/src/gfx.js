@@ -30,7 +30,7 @@ export function initRenderer(canvas) {
   G.scene.add(G.camera);
   G.composer = new EffectComposer(r);
   G.composer.addPass(new RenderPass(G.scene, G.camera));
-  G.bloom = new UnrealBloomPass(new THREE.Vector2(512, 288), 0.55, 0.6, 0.8);
+  G.bloom = new UnrealBloomPass(new THREE.Vector2(512, 288), 0.42, 0.5, 0.88);
   G.composer.addPass(G.bloom);
   G.composer.addPass(new OutputPass());
   resize();
@@ -51,19 +51,20 @@ export function setQuality(q) { G.quality = q; resize(); }
 export function render() { if (G.quality >= 2) G.composer.render(); else G.renderer.render(G.scene, G.camera); }
 
 // ---------- assets ----------
-function glowMat(map, glow) {
+function glowMat(map, glow, swz) {
   const m = new THREE.MeshStandardMaterial({ map, roughness: 0.7, metalness: 0.15 });
-  m.userData.u = { uGlow: { value: glow ? 1 : 0 }, uFlash: { value: 0 }, uTint: { value: new THREE.Color(1, 1, 1) } };
+  m.userData.u = { uGlow: { value: glow ? 1 : 0 }, uFlash: { value: 0 }, uTint: { value: new THREE.Color(1, 1, 1) }, uSwz: { value: swz || 0 } };
   m.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, m.userData.u);
     sh.fragmentShader = sh.fragmentShader
-      .replace('#include <common>', '#include <common>\nuniform float uGlow; uniform float uFlash; uniform vec3 uTint;')
+      .replace('#include <common>', '#include <common>\nuniform float uGlow; uniform float uFlash; uniform vec3 uTint; uniform float uSwz;')
       .replace('#include <emissivemap_fragment>', `
         #ifdef USE_MAP
           vec3 emc = texture2D( map, vMapUv ).rgb;
+          if ( uSwz > 1.5 ) { emc = emc.grb; diffuseColor.rgb = diffuseColor.grb; } else if ( uSwz > 0.5 ) { emc = emc.gbr; diffuseColor.rgb = diffuseColor.gbr; }
           float emx = max( emc.r, max( emc.g, emc.b ) ); float emn = min( emc.r, min( emc.g, emc.b ) );
           float eg = smoothstep( 0.22, 0.6, emx - emn ) * smoothstep( 0.25, 0.75, emx );
-          totalEmissiveRadiance += emc * ( eg * uGlow * 1.8 + 0.1 ) + vec3( uFlash );
+          totalEmissiveRadiance += emc * ( eg * uGlow * 1.1 + 0.12 + uFlash * 2.0 ) + vec3( uFlash * 0.35 );
         #endif
         diffuseColor.rgb *= uTint;`);
   };
@@ -108,7 +109,7 @@ export function makeEnemyVisual(kind, yawFix) {
   let obj; const mats = [];
   if (src) {
     const c = src.clone(true);
-    c.traverse((o) => { if (o.isMesh) { const m = glowMat(o.material.map, true); o.material = m; mats.push(m); } });
+    c.traverse((o) => { if (o.isMesh) { const m = glowMat(o.material.map, true, d.swz); o.material = m; mats.push(m); } });
     obj = normalize(c, d.size, false);
     obj.children[0].rotation.y = yawFix || 0;
   } else obj = fallbackModel(kind);
@@ -146,17 +147,18 @@ export function buildWorld() {
   const wallMat = new THREE.ShaderMaterial({
     uniforms: { uTime: { value: 0 }, uColor: { value: new THREE.Color(0x7a5cff) } }, transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending,
     vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
-    fragmentShader: 'uniform float uTime; uniform vec3 uColor; varying vec2 vUv; void main(){ float f = pow(1.0 - vUv.y, 2.5); float l = smoothstep(0.92, 1.0, sin(vUv.x * 500.0 + uTime * 0.6) * 0.5 + 0.5) * 0.35; float sc = smoothstep(0.9, 1.0, sin(vUv.y * 40.0 - uTime * 2.0) * 0.5 + 0.5) * 0.25; gl_FragColor = vec4(uColor * (f * 0.55 + (l + sc) * f), 1.0); }',
+    fragmentShader: 'uniform float uTime; uniform vec3 uColor; varying vec2 vUv; void main(){ float f = pow(1.0 - vUv.y, 2.5); float l = smoothstep(0.92, 1.0, sin(vUv.x * 500.0 + uTime * 0.6) * 0.5 + 0.5) * 0.35; float sc = smoothstep(0.9, 1.0, sin(vUv.y * 40.0 - uTime * 2.0) * 0.5 + 0.5) * 0.25; gl_FragColor = vec4(uColor * (f * 0.26 + (l + sc) * f * 0.8), 1.0); }',
   });
   G.wall = new THREE.Mesh(new THREE.CylinderGeometry(R, R, 7, 96, 1, true), wallMat); G.wall.position.y = 3.5; s.add(G.wall);
 
   // pillars (cover)
-  const stone = new THREE.MeshStandardMaterial({ color: 0x2a3048, roughness: 0.8, metalness: 0.3, flatShading: true });
+  const stone = new THREE.MeshStandardMaterial({ color: 0x6f7aa6, roughness: 0.85, metalness: 0.1, flatShading: true });
   const cry = new THREE.MeshStandardMaterial({ color: 0x1a1030, emissive: 0x7a5cff, emissiveIntensity: 1.6, roughness: 0.3, flatShading: true });
   G.accentMats.push(cry);
   for (let i = 0; i < 5; i++) {
     const a = (i / 5) * Math.PI * 2 + 0.3, x = Math.cos(a) * 13.5, z = Math.sin(a) * 13.5;
     const p = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 1.3, 4.6, 6), stone); p.position.set(x, 2.3, z); s.add(p);
+    for (const [py, pr] of [[0.9, 1.26], [3.6, 0.99]]) { const band = new THREE.Mesh(new THREE.CylinderGeometry(pr, pr + 0.03, 0.12, 6), cry); band.position.set(x, py, z); s.add(band); }
     const c = new THREE.Mesh(new THREE.OctahedronGeometry(0.75), cry); c.scale.y = 1.7; c.position.set(x, 5.6, z); c.userData.spin = 1; s.add(c);
     G.spinners = G.spinners || []; G.spinners.push(c);
     PILLARS.push({ x, z, r: 1.45 });
@@ -190,19 +192,23 @@ export function buildViewModel() {
     hilt = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.028, 0.36, 10), new THREE.MeshStandardMaterial({ color: 0x555b66, metalness: 0.8, roughness: 0.35 }));
   }
   G.hilt = hilt; vm.add(hilt);
-  const geo = new THREE.CylinderGeometry(0.006, 0.026, 1.08, 4, 1); geo.translate(0, 0.54 + 0.17, 0);
+  // saber blade: thin white-hot core plus soft additive glow shells
+  const L = 0.95, y0 = 0.17;
+  const cap = (r) => { const g = new THREE.CapsuleGeometry(r, L, 6, 14); g.translate(0, y0 + L / 2 + 0.011, 0); return g; };
   G.bladeMat = new THREE.MeshBasicMaterial({ color: 0xffffff, toneMapped: false });
-  G.blade = new THREE.Mesh(geo, G.bladeMat); G.blade.scale.set(2.2, 1, 0.7); vm.add(G.blade);
-  G.bladeGlowMat = new THREE.MeshBasicMaterial({ color: 0xff8a2a, transparent: true, opacity: 0.42, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false });
-  G.bladeGlow = new THREE.Mesh(geo, G.bladeGlowMat); G.bladeGlow.scale.set(5.2, 1.02, 2.4); vm.add(G.bladeGlow);
-  G.bladeLight = new THREE.PointLight(0xff8a2a, 14, 11, 1.6); G.bladeLight.position.set(0, 0.2, -0.8); G.camera.add(G.bladeLight);
+  G.blade = new THREE.Mesh(cap(0.0105), G.bladeMat); vm.add(G.blade);
+  G.bladeGlowMat = new THREE.MeshBasicMaterial({ color: 0xff8a2a, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false });
+  G.bladeGlow = new THREE.Group(); vm.add(G.bladeGlow);
+  for (const [r, o] of [[0.019, 0.55], [0.032, 0.26], [0.055, 0.12]]) { const m = G.bladeGlowMat.clone(); m.opacity = o; m.color = G.bladeGlowMat.color; const sh = new THREE.Mesh(cap(r), m); sh.renderOrder = 4; G.bladeGlow.add(sh); }
+  G.bladeLight = new THREE.PointLight(0xff8a2a, 5, 10, 1.4); G.bladeLight.position.set(0, 0.2, -0.8); G.camera.add(G.bladeLight);
 }
 export function setBladeColor(hex) {
   const c = new THREE.Color(hex);
-  G.bladeMat.color.copy(c).lerp(new THREE.Color(1, 1, 1), 0.62);
+  G.bladeMat.color.copy(c).lerp(new THREE.Color(1, 1, 1), 0.8);
   G.bladeGlowMat.color.copy(c); G.bladeLight.color.copy(c); trail.mat.color.copy(c);
 }
-export function setBladeLength(k) { G.blade.scale.y = k; G.bladeGlow.scale.y = k * 1.02; }
+export function setBladeLength(k) { G.blade.scale.y = k; G.bladeGlow.scale.y = k; }
+export function setBladeGlow(k) { G.bladeGlow.scale.x = G.bladeGlow.scale.z = k; G.bladeLight.intensity = 5 * k; }
 
 // ---------- particles ----------
 const PN = 1000;
@@ -280,10 +286,10 @@ export function buildTrail() {
 }
 export function updateTrail(active, power) {
   G.blade.updateWorldMatrix(true, false);
-  trail.a.set(0, 0.3, 0).applyMatrix4(G.blade.matrixWorld); trail.b.set(0, 1.25, 0).applyMatrix4(G.blade.matrixWorld);
-  for (let i = TN - 1; i > 0; i--) { for (let k = 0; k < 6; k++) trail.pos[i * 6 + k] = trail.pos[(i - 1) * 6 + k]; trail.alpha[i] = trail.alpha[i - 1] * 0.8; }
+  trail.a.set(0, 0.3, 0).applyMatrix4(G.blade.matrixWorld); trail.b.set(0, 1.13, 0).applyMatrix4(G.blade.matrixWorld);
+  for (let i = TN - 1; i > 0; i--) { for (let k = 0; k < 6; k++) trail.pos[i * 6 + k] = trail.pos[(i - 1) * 6 + k]; trail.alpha[i] = trail.alpha[i - 1] * 0.86; }
   trail.pos[0] = trail.a.x; trail.pos[1] = trail.a.y; trail.pos[2] = trail.a.z; trail.pos[3] = trail.b.x; trail.pos[4] = trail.b.y; trail.pos[5] = trail.b.z;
   trail.alpha[0] = active ? power : 0;
-  for (let i = 0; i < TN; i++) { const a = trail.alpha[i]; for (let k = 0; k < 6; k++) trail.col[i * 6 + k] = a * (k < 3 ? 0.25 : 1); }
+  for (let i = 0; i < TN; i++) { const a = trail.alpha[i]; for (let k = 0; k < 6; k++) trail.col[i * 6 + k] = a * (k < 3 ? 0.08 : 1); }
   trail.mesh.geometry.attributes.position.needsUpdate = true; trail.mesh.geometry.attributes.color.needsUpdate = true;
 }

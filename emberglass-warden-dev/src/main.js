@@ -1,6 +1,6 @@
 /* global __PLATFORM__, __TEST__ */
 import { ENEMY, UPGRADES, ARMORY, BLADES, RANKS, TRIALS, mulberry32, waveList } from './data.js';
-import { THREE, G, R, PILLARS, initRenderer, resize, render, setQuality, loadAssets, makeEnemyVisual, buildWorld, setBiome, buildViewModel, setBladeColor, setBladeLength, buildParticles, emit, updateParticles, buildRings, ring, updateRings, buildTrail, updateTrail } from './gfx.js';
+import { THREE, G, R, PILLARS, initRenderer, resize, render, setQuality, loadAssets, makeEnemyVisual, buildWorld, setBiome, buildViewModel, setBladeColor, setBladeLength, setBladeGlow, buildParticles, emit, updateParticles, buildRings, ring, updateRings, buildTrail, updateTrail } from './gfx.js';
 import { initAudio, resumeAudio, sfx, setMuted, setForcedMute, isMuted, startMusic, setIntensity } from './audio.js';
 import { platform } from './platform.js';
 
@@ -275,26 +275,26 @@ function updateEnemy(e, dt) {
       e.cd -= dt; const tang = dist < 8 ? 0.65 : 0.2; tvx = (nx - nz * tang * e.orbit) * sp; tvz = (nz + nx * tang * e.orbit) * sp;
       if (dist < 3) { tvx -= nx * sp; tvz -= nz * sp; }
       if (dist < 6.5 && e.cd <= 0 && meleeBusy() < 2) { e.state = 'windup'; e.t = 0; sfx('tele'); }
-    } else if (e.state === 'windup') { tvx = -nx * 2; tvz = -nz * 2; glow = 3 + Math.sin(e.t * 40); pitch = -0.45; if (e.t > 0.45) { e.state = 'lunge'; e.t = 0; e.lx = nx; e.lz = nz; e.hitDone = false; } }
-    else if (e.state === 'lunge') { e.vx = e.lx * 19; e.vz = e.lz * 19; tvx = e.vx; tvz = e.vz; glow = 2.5; pitch = 0.35; face = false; if (!e.hitDone && dist < 1.7) { e.hitDone = true; strikePlayer(e, e.dmg); } if (e.t > 0.34) { e.state = 'recover'; e.t = 0; } }
+    } else if (e.state === 'windup') { tvx = -nx * 2; tvz = -nz * 2; glow = 2.1 + Math.sin(e.t * 40) * 0.5; pitch = -0.45; if (e.t > (d.wind || 0.45)) { e.state = 'lunge'; e.t = 0; e.lx = nx; e.lz = nz; e.hitDone = false; } }
+    else if (e.state === 'lunge') { e.vx = e.lx * 19; e.vz = e.lz * 19; tvx = e.vx; tvz = e.vz; glow = 2; pitch = 0.35; face = false; if (!e.hitDone && dist < 1.7) { e.hitDone = true; strikePlayer(e, e.dmg); } if (e.t > 0.34) { e.state = 'recover'; e.t = 0; } }
     else if (e.state === 'recover') { tvx = -nx * 1.5; tvz = -nz * 1.5; if (e.t > 0.75) { e.state = 'chase'; e.t = 0; e.cd = 1 + Math.random() * 1.4; } }
   } else if (d.model === 'brute') {
     if (e.state === 'chase') { e.cd -= dt; tvx = nx * sp; tvz = nz * sp; if (dist < 3.6 && e.cd <= 0) { e.state = 'windup'; e.t = 0; sfx('bossTele'); } }
-    else if (e.state === 'windup') { glow = 3 + Math.sin(e.t * 30); pitch = -0.5 * Math.min(1, e.t / 0.5); if (e.t > 0.85) { e.state = 'recover'; e.t = 0; pitch = 0.5; ring(e.x + nx * 2, 0.1, e.z + nz * 2, 0.5, 4.2, 0.4, 0xffa040); addShake(dist < 8 ? 0.4 : 0.1); emit(e.x + nx * 2, 0.3, e.z + nz * 2, 26, { color: d.glow, speed: 8, life: 0.5, size: 0.25, flat: true }); if (dist < 4.6) strikePlayer(e, e.dmg); } }
+    else if (e.state === 'windup') { glow = 2.1 + Math.sin(e.t * 30) * 0.5; pitch = -0.5 * Math.min(1, e.t / 0.5); if (e.t > 0.85) { e.state = 'recover'; e.t = 0; pitch = 0.5; ring(e.x + nx * 2, 0.1, e.z + nz * 2, 0.5, 4.2, 0.4, 0xffa040); addShake(dist < 8 ? 0.4 : 0.1); emit(e.x + nx * 2, 0.3, e.z + nz * 2, 26, { color: d.glow, speed: 8, life: 0.5, size: 0.25, flat: true }); if (dist < 4.6) strikePlayer(e, e.dmg); } }
     else if (e.state === 'recover') { pitch = 0.45 * (1 - e.t / 1.15); glow = 0.5; if (e.t > 1.15) { e.state = 'chase'; e.t = 0; e.cd = 0.5 + Math.random(); } }
   } else if (d.model === 'stinger') {
     e.cd -= dt;
     if (e.state === 'chase') { const want = 12, rad = clamp((dist - want) * 0.6, -1, 1); tvx = (nx * rad - nz * 0.7 * e.orbit) * sp; tvz = (nz * rad + nx * 0.7 * e.orbit) * sp; if (e.cd <= 0 && dist < 22) { e.state = 'windup'; e.t = 0; sfx('tele'); } if (Math.sin(G.time * 0.4 + e.seed) > 0.97) e.orbit *= -1; }
-    else if (e.state === 'windup') { glow = 3 + Math.sin(e.t * 40); if (e.t > 0.5) { fireShot(e, p.x, 1.35, p.z, 13 + Math.min(6, S.wave * 0.3), e.dmg); hint('deflect', 'Spore incoming! <b>Slash</b> or <b>block</b> it to send it back'); e.state = 'chase'; e.t = 0; e.cd = (S.trial === 'storm' ? 1.7 : 2.7) + Math.random() * 0.8; } }
+    else if (e.state === 'windup') { glow = 2.1 + Math.sin(e.t * 40) * 0.5; if (e.t > 0.5) { { const nv = d.volley || 1; for (let i = 0; i < nv; i++) fireShot(e, p.x, 1.35, p.z, 13 + Math.min(6, S.wave * 0.3), e.dmg, (i - (nv - 1) / 2) * 0.2); } hint('deflect', 'Spore incoming! <b>Slash</b> or <b>block</b> it to send it back'); e.state = 'chase'; e.t = 0; e.cd = (S.trial === 'storm' ? 1.7 : 2.7) + Math.random() * 0.8; } }
   } else if (d.boss) {
     if (!e.summoned && e.hp < e.maxHp * 0.5) { e.summoned = true; e.enraged = true; banner('THE TYRANT ENRAGES', '', 1.6); sfx('boss'); for (let i = 0; i < 3; i++) { const a = Math.random() * TAU; S.queue.push('wraith'); } }
     if (e.state === 'chase') {
       e.cd -= dt; tvx = nx * sp; tvz = nz * sp;
       if (e.cd <= 0) { const r = (e.pattern++) % 3; if (dist < 6.2) { e.state = 'sweepW'; e.strikes = 0; } else if (r === 1) e.state = 'volleyW'; else e.state = 'chargeW'; e.t = 0; sfx('bossTele'); }
-    } else if (e.state === 'sweepW') { glow = 3 + Math.sin(e.t * 30); pitch = -0.3; tvx = nx * 1.5; tvz = nz * 1.5; const need = e.strikes === 0 ? 0.7 : 0.45; if (e.t > need) { e.strikes++; e.t = 0; ring(e.x + nx * 3, 1.2, e.z + nz * 3, 0.5, 5, 0.3, 0xb070ff); addShake(0.3); sfx('swing', 0.6); let res = 'miss'; if (dist < 6.6) res = strikePlayer(e, e.dmg); if (res === 'parry' || e.strikes >= 2) { if (res !== 'parry') { e.state = 'recover'; e.t = 0; } } } }
-    else if (e.state === 'chargeW') { glow = 3 + Math.sin(e.t * 40); pitch = -0.35; if (e.t > 0.9) { e.state = 'charge'; e.t = 0; e.lx = nx; e.lz = nz; e.hitDone = false; sfx('dash'); } }
-    else if (e.state === 'charge') { e.vx = e.lx * 24; e.vz = e.lz * 24; tvx = e.vx; tvz = e.vz; pitch = 0.4; glow = 2.5; face = false; emit(e.x, 0.6, e.z, 3, { color: d.glow, speed: 3, life: 0.5, size: 0.3 }); if (!e.hitDone && dist < 3) { e.hitDone = true; strikePlayer(e, e.dmg * 1.3); } if (e.t > 0.6) { e.state = 'recover'; e.t = 0; } }
-    else if (e.state === 'volleyW') { glow = 3 + Math.sin(e.t * 40); if (e.t > 0.7) { const n = e.enraged ? 7 : 5; for (let i = 0; i < n; i++) fireShot(e, p.x, 1.35, p.z, 15, e.dmg * 0.6, (i - (n - 1) / 2) * 0.16); e.state = 'recover'; e.t = 0.5; } }
+    } else if (e.state === 'sweepW') { glow = 2.1 + Math.sin(e.t * 30) * 0.5; pitch = -0.3; tvx = nx * 1.5; tvz = nz * 1.5; const need = e.strikes === 0 ? 0.7 : 0.45; if (e.t > need) { e.strikes++; e.t = 0; ring(e.x + nx * 3, 1.2, e.z + nz * 3, 0.5, 5, 0.3, 0xb070ff); addShake(0.3); sfx('swing', 0.6); let res = 'miss'; if (dist < 6.6) res = strikePlayer(e, e.dmg); if (res === 'parry' || e.strikes >= 2) { if (res !== 'parry') { e.state = 'recover'; e.t = 0; } } } }
+    else if (e.state === 'chargeW') { glow = 2.1 + Math.sin(e.t * 40) * 0.5; pitch = -0.35; if (e.t > 0.9) { e.state = 'charge'; e.t = 0; e.lx = nx; e.lz = nz; e.hitDone = false; sfx('dash'); } }
+    else if (e.state === 'charge') { e.vx = e.lx * 24; e.vz = e.lz * 24; tvx = e.vx; tvz = e.vz; pitch = 0.4; glow = 2; face = false; emit(e.x, 0.6, e.z, 3, { color: d.glow, speed: 3, life: 0.5, size: 0.3 }); if (!e.hitDone && dist < 3) { e.hitDone = true; strikePlayer(e, e.dmg * 1.3); } if (e.t > 0.6) { e.state = 'recover'; e.t = 0; } }
+    else if (e.state === 'volleyW') { glow = 2.1 + Math.sin(e.t * 40) * 0.5; if (e.t > 0.7) { const n = e.enraged ? 7 : 5; for (let i = 0; i < n; i++) fireShot(e, p.x, 1.35, p.z, 15, e.dmg * 0.6, (i - (n - 1) / 2) * 0.16); e.state = 'recover'; e.t = 0.5; } }
     else if (e.state === 'recover') { glow = 0.5; pitch = 0.25; if (e.t > 1.3) { e.state = 'chase'; e.t = 0; e.cd = e.enraged ? 0.5 : 1; } }
   }
   // integrate
@@ -314,7 +314,7 @@ function updateEnemy(e, dt) {
   e.obj.rotation.x += (pitch - e.obj.rotation.x) * Math.min(1, 12 * dt);
   e.obj.rotation.z = Math.sin(G.time * 1.7 + e.seed) * 0.06;
   e.glow += (glow - e.glow) * Math.min(1, 14 * dt); e.flash = Math.max(0, e.flash - dt * 6);
-  for (const m of e.mats) { m.userData.u.uGlow.value = e.glow; m.userData.u.uFlash.value = e.flash * 0.9; }
+  for (const m of e.mats) { m.userData.u.uGlow.value = e.glow; m.userData.u.uFlash.value = e.flash * 0.16; }
 }
 
 function updateShots(dt) {
@@ -360,7 +360,7 @@ function updateWaves(dt) {
   if (S.queue.length && S.spawnT <= 0 && alive < cap) {
     const kind = S.queue.shift(); let x, z, tries = 0;
     do { const a = Math.random() * TAU, r = kind === 'tyrant' ? 16 : R - 3 - Math.random() * 4; x = Math.cos(a) * r; z = Math.sin(a) * r; } while (Math.hypot(x - p.x, z - p.z) < 9 && tries++ < 20);
-    spawnEnemy(kind, x, z, { elite: S.queue.length === S.eliteAt && kind !== 'tyrant' }); S.spawnT = S.wave < 3 ? 1.1 : 0.6;
+    spawnEnemy(kind, x, z, { elite: S.queue.length === S.eliteAt && kind !== 'tyrant' }); S.spawnT = S.wave < 3 ? 1.1 : 0.6; return;
   }
   if (!S.queue.length && alive === 0) {
     S.waveActive = false; S.betweenT = 1.6; S.slowT = 0.6; sfx('wave'); p.hp = Math.min(p.maxHp, p.hp + 15);
@@ -457,7 +457,7 @@ $('sens').addEventListener('input', (e) => { save.sens = +e.target.value; persis
 function gameOverQuiet() { show('pause', false); S.state = 'playing'; gameOver(); }
 
 // ---------------- player update ----------------
-const POSE = { idle: [0.34, -0.36, -0.55, -0.55, 0.3], block: [0.02, -0.2, -0.5, -0.2, 1.3], charge: [0.5, 0.0, -0.36, 0.55, -0.9],
+const POSE = { idle: [0.46, -0.4, -0.5, -1.0, 0.2], block: [0.02, -0.2, -0.5, -0.2, 1.3], charge: [0.44, -0.12, -0.5, 0.22, -0.55],
   s1: [0.5, -0.05, -0.5, -0.5, -1.0], e1: [-0.4, -0.38, -0.55, -1.25, 1.6], s2: [-0.5, -0.05, -0.5, -0.5, 1.0], e2: [0.45, -0.38, -0.55, -1.25, -1.6],
   s3: [0.12, 0.12, -0.42, 0.6, 0.1], e3: [0.05, -0.5, -0.62, -1.95, 0.0], sh: [0.55, 0.05, -0.38, 0.5, -1.3], eh: [-0.5, -0.42, -0.6, -1.35, 1.9] };
 const cur = POSE.idle.slice(), tmp = [0, 0, 0, 0, 0];
@@ -487,7 +487,7 @@ function updatePlayer(dt) {
   if (p.moved > 4 && S.hintId === 'move' && save.tut.slash) hintDone('move');
   const pr = Math.hypot(p.x, p.z); if (pr > R - 0.7) { p.x *= (R - 0.7) / pr; p.z *= (R - 0.7) / pr; }
   for (const c of PILLARS) { const ax = p.x - c.x, az = p.z - c.z, l = Math.hypot(ax, az), m = c.r + 0.5; if (l < m && l > 0.001) { p.x = c.x + ax / l * m; p.z = c.z + az / l * m; } }
-  for (const e of enemies) { if (e.dead || p.dashT > 0) continue; const ax = p.x - e.x, az = p.z - e.z, l = Math.hypot(ax, az), m = e.d.radius * 0.7 + 0.4; if (l < m && l > 0.001) { p.x = e.x + ax / l * m; p.z = e.z + az / l * m; } }
+  for (const e of enemies) { if (e.dead || p.dashT > 0) continue; const ax = p.x - e.x, az = p.z - e.z, l = Math.hypot(ax, az), m = e.d.radius * 0.9 + 0.5; if (l < m && l > 0.001) { p.x = e.x + ax / l * m; p.z = e.z + az / l * m; } }
   // block
   const wantBlock = inp.block && p.stun <= 0 && !(p.swing && p.swing.t / p.swing.dur < 0.6);
   if (wantBlock && !p.blocking) { p.blocking = true; p.blockT = 0; if (p.swing) p.swing = null; p.chargeT = 0; p.charged = false; }
@@ -518,13 +518,13 @@ function updatePlayer(dt) {
   const bobY = Math.sin(p.bob * 1.6) * 0.035, bobX = Math.cos(p.bob * 0.8) * 0.02, jit = p.charged ? (Math.random() - 0.5) * 0.012 : 0;
   G.vm.position.set(cur[0] + bobX + jit, cur[1] + bobY * 0.6 + jit, cur[2]); G.vm.rotation.set(cur[3], 0, cur[4]);
   const glowK = p.charged ? 1.6 + Math.sin(G.time * 40) * 0.3 : p.blocking ? 1.3 : 1;
-  G.bladeGlow.scale.x = 5.2 * glowK; G.bladeGlow.scale.z = 2.4 * glowK; G.bladeLight.intensity = 14 * glowK;
+  setBladeGlow(glowK);
   p.fovKick = Math.max(0, p.fovKick - dt * 4);
   S.shake = Math.max(0, S.shake - dt * 2.4); const sh = S.shake * S.shake * 0.09;
   G.camera.position.set(p.x + (Math.random() - 0.5) * sh, 1.65 + bobY + (Math.random() - 0.5) * sh, p.z);
   G.camera.rotation.set(p.pitch + (Math.random() - 0.5) * sh * 0.3, p.yaw + (Math.random() - 0.5) * sh * 0.3, 0);
   const fov = G.baseFov + p.fovKick * 9; if (Math.abs(G.camera.fov - fov) > 0.05) { G.camera.fov = fov; G.camera.updateProjectionMatrix(); }
-  updateTrail(trailOn, p.swing && p.swing.type === 'heavy' ? 1 : 0.75);
+  updateTrail(trailOn, p.swing && p.swing.type === 'heavy' ? 0.55 : 0.38);
 }
 
 // ---------------- main loop ----------------
@@ -548,6 +548,10 @@ function sim(dt) {
 }
 function frame(now) {
   requestAnimationFrame(frame);
+  if (__TEST__ && window.__ew.manual) { last = now; return; }
+  tick(now);
+}
+function tick(now) {
   let dt = Math.min(0.1, (now - last) / 1000 || 0); last = now;
   if (S.state === 'paused' || S.state === 'upgrade' || S.state === 'loading') { render(); return; }
   fpsAcc += dt; fpsN++; if (fpsAcc > 2) { const ms = fpsAcc / fpsN * 1000; fpsAcc = 0; fpsN = 0; if (ms > 27 && G.quality > 0) { if (++slowFrames >= 2) { setQuality(G.quality - 1); slowFrames = 0; } } else slowFrames = 0; }
@@ -572,5 +576,5 @@ async function boot() {
   setBiome(0); platform.loadingStop();
   show('loading', false); toMenu(); requestAnimationFrame(frame);
 }
-if (__TEST__) window.__ew = { S, p, st, enemies, shots, inp, save, G, sim, render, startRun, pickUpgrade, spawnEnemy, damageEnemy, keys, YAW_FIX, step(n, dt = STEP) { for (let i = 0; i < n; i++) sim(dt); if (S.state === 'playing') updateHud(); } };
+if (__TEST__) window.__ew = { manual: false, tick, againRun, toggleMute, isMuted, setLast(v) { last = v; acc = 0; }, jumpWave(n) { clearWorld(); S.queue.length = 0; S.betweenT = 0; if (S.state === 'upgrade') { show('upg', false); S.state = 'playing'; } startWave(n); }, toMenu, pause, resume, gameOver, doBurst, platform, cur, POSE, S, p, st, enemies, shots, inp, save, G, sim, render, startRun, pickUpgrade, spawnEnemy, damageEnemy, keys, YAW_FIX, step(n, dt = STEP) { for (let i = 0; i < n; i++) sim(dt); if (S.state === 'playing') updateHud(); } };
 boot();

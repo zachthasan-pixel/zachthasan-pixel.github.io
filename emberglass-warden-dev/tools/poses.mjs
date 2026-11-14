@@ -1,0 +1,12 @@
+import { open } from './lib.mjs';
+import { execSync } from 'node:child_process';
+const { pg, errs, close } = await open({ w: 640, h: 360 });
+await pg.evaluate(() => { const g = window.__ew; g.startRun(false); g.S.queue.length = 0; g.S.waveActive = false; g.step(300); document.getElementById('hint').style.display = 'none'; document.getElementById('banner').style.display = 'none'; g.S.state = 'x'; g.G.quality = 2; });
+const names = await pg.evaluate(() => Object.keys(window.__ew.POSE));
+const files = [];
+const snap = async (label, pose) => { await pg.evaluate((c) => { const g = window.__ew; g.G.vm.position.set(c[0], c[1], c[2]); g.G.vm.rotation.set(c[3], 0, c[4]); g.G.camera.position.set(0, 1.65, 9); g.G.camera.rotation.set(0, 0, 0); g.render(); }, pose); const f = 'shots/pose-' + label + '.png'; await pg.screenshot({ path: f }); files.push(f); };
+const P = await pg.evaluate(() => window.__ew.POSE);
+for (const n of ['idle', 'block', 'charge']) await snap(n, P[n]);
+for (const a of ['1', '2', '3', 'h']) for (const k of [0, 0.5, 1]) await snap(a + '-' + k, P['s' + a].map((v, i) => v + (P['e' + a][i] - v) * k));
+execSync('montage ' + files.join(' ') + ' -tile 3x5 -geometry 427x240+2+2 shots/poses.png');
+console.log(errs); await close();

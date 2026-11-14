@@ -4,7 +4,9 @@ export const ENEMY = {
   wraith: { name: 'Fang Wraith', model: 'wraith', hp: 30, speed: 6.2, radius: 0.9, size: 2.0, hover: 1.25, dmg: 12, shards: 2, score: 100, cost: 1, glow: [1.0, 0.25, 0.9] },
   stinger: { name: 'Spore Stinger', model: 'stinger', hp: 24, speed: 3.6, radius: 0.9, size: 1.8, hover: 1.9, dmg: 10, shards: 3, score: 150, cost: 1.5, glow: [0.55, 1.0, 0.2] },
   brute: { name: 'Shard Brute', model: 'brute', hp: 120, speed: 2.7, radius: 1.5, size: 3.6, hover: 1.7, dmg: 26, shards: 7, score: 400, cost: 3, glow: [1.0, 0.55, 0.15] },
-  tyrant: { name: 'Rift Tyrant', model: 'tyrant', hp: 520, speed: 3.5, radius: 2.2, size: 6.0, hover: 2.9, dmg: 24, shards: 40, score: 3000, cost: 99, glow: [0.7, 0.35, 1.0], boss: true },
+  shade: { name: 'Frost Shade', model: 'wraith', swz: 1, hp: 18, speed: 8.4, radius: 0.7, size: 1.5, hover: 1.2, dmg: 9, shards: 2, score: 130, cost: 0.8, glow: [0.3, 0.9, 1.0], wind: 0.32 },
+  mortar: { name: 'Blight Mortar', model: 'stinger', swz: 2, hp: 46, speed: 3.0, radius: 1.0, size: 2.2, hover: 2.2, dmg: 9, shards: 5, score: 260, cost: 2.2, glow: [1.0, 0.35, 0.2], volley: 3 },
+  tyrant: { name: 'Rift Tyrant', model: 'tyrant', hp: 1300, speed: 3.5, radius: 2.2, size: 6.0, hover: 2.9, dmg: 24, shards: 40, score: 3000, cost: 99, glow: [0.7, 0.35, 1.0], boss: true },
 };
 
 // Run upgrades (pick 1 of 3 after each wave).
@@ -92,10 +94,13 @@ export function waveList(wave, rng, trial) {
   else {
     let budget = 5 + wave * 1.25;
     const kinds = ['wraith', 'wraith', 'stinger', 'brute'];
+    if (wave >= 6) kinds.push('shade', 'shade');
+    if (wave >= 9) kinds.push('mortar');
+    if (wave >= 13) kinds.push('brute', 'mortar');
     let guard = 0;
     while (budget > 0.9 && guard++ < 60) {
       const k = kinds[Math.floor(rng() * kinds.length)];
-      const c = k === 'brute' ? 3 : k === 'stinger' ? 1.5 : 1;
+      const c = ENEMY[k].cost;
       if (c > budget + 0.5) continue;
       out.push(k); budget -= c;
     }
