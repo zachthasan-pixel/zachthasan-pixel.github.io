@@ -1,12 +1,13 @@
 // Game data: enemies, upgrades, armory, blades, ranks, daily trials.
 
 export const ENEMY = {
-  wraith: { name: 'Fang Wraith', model: 'wraith', hp: 30, speed: 6.2, radius: 0.9, size: 2.0, hover: 1.25, dmg: 12, shards: 2, score: 100, cost: 1, glow: [1.0, 0.25, 0.9] },
-  stinger: { name: 'Spore Stinger', model: 'stinger', hp: 24, speed: 3.6, radius: 0.9, size: 1.8, hover: 1.9, dmg: 10, shards: 3, score: 150, cost: 1.5, glow: [0.55, 1.0, 0.2] },
-  brute: { name: 'Shard Brute', model: 'brute', hp: 120, speed: 2.7, radius: 1.5, size: 3.6, hover: 1.7, dmg: 26, shards: 7, score: 400, cost: 3, glow: [1.0, 0.55, 0.15] },
-  shade: { name: 'Frost Shade', model: 'wraith', swz: 1, hp: 18, speed: 8.4, radius: 0.7, size: 1.5, hover: 1.2, dmg: 9, shards: 2, score: 130, cost: 0.8, glow: [0.3, 0.9, 1.0], wind: 0.32 },
-  mortar: { name: 'Blight Mortar', model: 'stinger', swz: 2, hp: 46, speed: 3.0, radius: 1.0, size: 2.2, hover: 2.2, dmg: 9, shards: 5, score: 260, cost: 2.2, glow: [1.0, 0.35, 0.2], volley: 3 },
-  tyrant: { name: 'Rift Tyrant', model: 'tyrant', hp: 1300, speed: 3.5, radius: 2.2, size: 6.0, hover: 2.9, dmg: 24, shards: 40, score: 3000, cost: 99, glow: [0.7, 0.35, 1.0], boss: true },
+  wraith: { name: 'Fang Wraith', model: 'wraith', hp: 30, speed: 6.2, radius: 0.9, size: 2.0, hover: 1.25, dmg: 9, shards: 2, score: 100, cost: 1, glow: [1.0, 0.25, 0.9] },
+  stinger: { name: 'Spore Stinger', model: 'stinger', hp: 24, speed: 3.6, radius: 0.9, size: 1.8, hover: 1.9, dmg: 8, shards: 3, score: 150, cost: 1.5, glow: [0.55, 1.0, 0.2] },
+  brute: { name: 'Shard Brute', model: 'brute', hp: 120, speed: 2.7, radius: 1.5, size: 3.6, hover: 1.7, dmg: 19, shards: 7, score: 400, cost: 3, glow: [1.0, 0.55, 0.15] },
+  shade: { name: 'Frost Shade', model: 'wraith', swz: 1, hp: 18, speed: 8.4, radius: 0.7, size: 1.5, hover: 1.2, dmg: 7, shards: 2, score: 130, cost: 0.8, glow: [0.3, 0.9, 1.0], wind: 0.32 },
+  mortar: { name: 'Blight Mortar', model: 'stinger', swz: 2, hp: 46, speed: 3.0, radius: 1.0, size: 2.2, hover: 2.2, dmg: 7, shards: 5, score: 260, cost: 2.2, glow: [1.0, 0.35, 0.2], volley: 3 },
+  tyrant: { name: 'Rift Tyrant', model: 'tyrant', hp: 760, speed: 3.5, radius: 2.2, size: 6.0, hover: 2.9, dmg: 14, shards: 40, score: 3000, cost: 99, glow: [0.7, 0.35, 1.0], boss: true },
+  tyrant2: { name: 'Venom Tyrant', model: 'tyrant', swz: 1, hp: 1000, speed: 4.1, radius: 2.2, size: 6.4, hover: 3.0, dmg: 16, shards: 60, score: 5000, cost: 99, glow: [0.35, 1.0, 0.7], boss: true, volley: 9, adds: 'mortar' },
 };
 
 // Run upgrades (pick 1 of 3 after each wave).
@@ -38,6 +39,10 @@ export const ARMORY = [
   { id: 'lens', name: 'Shard Attractor', desc: '+10% shards earned', max: 5, cost: [60, 120, 200, 300, 450] },
   { id: 'head', name: 'Head Start', desc: 'Begin each run with a random upgrade', max: 2, cost: [150, 400] },
   { id: 'reroll', name: 'Reroll Charm', desc: '+1 upgrade reroll per run', max: 3, cost: [80, 180, 320] },
+  { id: 'step', name: 'Rift Step', desc: 'Start every run with a second dash charge', max: 1, cost: [260] },
+  { id: 'riposte', name: 'Riposte', desc: 'A parry strikes the beast for heavy damage', max: 3, cost: [220, 480, 900] },
+  { id: 'primed', name: 'Primed Core', desc: 'Start every run with Rift Burst half charged, then fully charged', max: 2, cost: [200, 600] },
+  { id: 'ward', name: 'Ward Stone', desc: 'Heal 10 more integrity after every wave', max: 3, cost: [180, 420, 800] },
 ];
 
 export const BLADES = [
@@ -67,6 +72,8 @@ export const BIOMES = [
   { name: 'Violet Rift', sky: 0xffffff, fog: 0x0b1030, light: 0x9db4ff, accent: 0x7a5cff },
   { name: 'Ember Wastes', sky: 0xffb38a, fog: 0x1e0c10, light: 0xffc49a, accent: 0xff7a2a },
   { name: 'Verdant Deep', sky: 0x9affc8, fog: 0x06201c, light: 0xa8ffd8, accent: 0x38ffa0 },
+  { name: 'Crimson Verge', sky: 0xff8fa8, fog: 0x200810, light: 0xffb0c0, accent: 0xff3860 },
+  { name: 'Frozen Halo', sky: 0xbfe8ff, fog: 0x081828, light: 0xd0f0ff, accent: 0x5ad0ff },
 ];
 
 export function mulberry32(a) {
@@ -83,14 +90,14 @@ export function waveList(wave, rng, trial) {
   const out = [];
   const add = (k, n) => { for (let i = 0; i < n; i++) out.push(k); };
   if (wave % 5 === 0) {
-    add('tyrant', 1);
+    add(wave % 10 === 0 ? 'tyrant2' : 'tyrant', 1);
     if (wave >= 10) { add('wraith', Math.min(6, wave / 5)); add('stinger', Math.min(4, wave / 5 - 1)); }
     return out;
   }
-  if (wave === 1) add('wraith', 3);
-  else if (wave === 2) add('wraith', 5);
-  else if (wave === 3) { add('wraith', 4); add('stinger', 2); }
-  else if (wave === 4) { add('wraith', 3); add('stinger', 2); add('brute', 1); }
+  if (wave === 1) add('wraith', 4);
+  else if (wave === 2) add('wraith', 6);
+  else if (wave === 3) { add('wraith', 5); add('stinger', 2); }
+  else if (wave === 4) { add('wraith', 4); add('stinger', 3); add('brute', 1); }
   else {
     let budget = 5 + wave * 1.25;
     const kinds = ['wraith', 'wraith', 'stinger', 'brute'];

@@ -38,7 +38,7 @@ function calcStats() {
   st.chain = u('chain'); st.reflect = 1 + u('reflect'); st.heavyMul = (1 + 0.3 * u('heavy')) * (S.trial === 'heavy' ? 2 : 1); st.heavyRate = 1 + 0.3 * u('heavy');
   st.shard = (1 + 0.5 * u('magnet')) * (1 + 0.1 * arm('lens')); st.thorn = u('thorn'); st.leech = u('leech');
   const mh = 100 + 10 * arm('hull') + 25 * u('vital'), me = 100 + 10 * arm('cap') + 30 * u('reserve');
-  p.hp += mh - p.maxHp; p.maxHp = mh; p.en += me - p.maxEn; p.maxEn = me; p.dashMax = 1 + u('dash2');
+  p.hp += mh - p.maxHp; p.maxHp = mh; p.en += me - p.maxEn; p.maxEn = me; p.dashMax = 1 + u('dash2') + arm('step');
   setBladeLength(st.reach);
 }
 
@@ -149,7 +149,7 @@ function killEnemy(e, o = {}) {
   S.score += e.d.score * mult * (e.elite ? 2 : 1);
   sfx('kill'); emit(e.x, e.y, e.z, e.d.boss ? 140 : 34, { color: e.d.glow, speed: e.d.boss ? 14 : 9, life: 0.9, size: 0.3 });
   ring(e.x, e.y, e.z, 0.3, e.d.size * 1.3, 0.45, new THREE.Color(e.d.glow[0], e.d.glow[1], e.d.glow[2]), true);
-  addBurst(e.d.boss ? 40 : 7); if (st.leech) p.hp = Math.min(p.maxHp, p.hp + 2 * st.leech);
+  addBurst(e.d.boss ? 40 : 7); p.hp = Math.min(p.maxHp, p.hp + 1.5 + 2 * st.leech);
   if (S.trial === 'drain') p.en = Math.min(p.maxEn, p.en + 25);
   const n = Math.round(e.d.shards * (e.elite ? 3 : 1));
   for (let i = 0; i < Math.min(n, 14); i++) spawnPickup(e.x, e.y, e.z, Math.ceil(n / Math.min(n, 14)));
@@ -168,7 +168,7 @@ let pickGeo, pickMat, shotGeo;
 function playerHurt(dmg, e) {
   if (p.inv > 0 || S.state !== 'playing') return;
   if (S.trial === 'glass') dmg *= 2;
-  p.hp -= dmg; p.inv = 0.4; S.combo = 0; addShake(0.7); sfx('hurt');
+  p.hp -= dmg; p.inv = 0.75; S.combo = 0; addShake(0.7); sfx('hurt');
   const v = $('vignette'); v.classList.remove('hit'); void v.offsetWidth; v.classList.add('hit');
   if (p.hp <= 0) {
     if (S.up.wind && !S.windUsed) { S.windUsed = true; p.hp = p.maxHp * 0.4; p.inv = 1.5; banner('SECOND WIND', 'You rise again', 2); doBurst(true); }
@@ -185,15 +185,15 @@ function strikePlayer(e, dmg) {
       p.en = Math.min(p.maxEn, p.en + 25); addBurst(14); addCombo(); S.score += 50;
       emit(lerp(p.x, e.x, 0.4), 1.5, lerp(p.z, e.z, 0.4), 30, { color: [1, 0.95, 0.7], speed: 10, life: 0.4, size: 0.2 });
       ring(lerp(p.x, e.x, 0.4), 1.5, lerp(p.z, e.z, 0.4), 0.2, 2.2, 0.3, 0xfff2c0, true);
-      dmgNum(e.x, e.y + 1, e.z, 'PARRY!', 'gold'); hintDone('parry');
+      dmgNum(e.x, e.y + 1, e.z, 'PARRY!', 'gold'); hintDone('block'); hintDone('parry'); if (arm('riposte')) damageEnemy(e, 22 * arm('riposte') * st.dmg, { pierce: true, heavy: true, kb: 3 });
       if (S.up.parry) { ring(p.x, 0.1, p.z, 0.5, 5.5, 0.4, 0xfff2c0); for (const q of enemies) if (!q.dead && Math.hypot(q.x - p.x, q.z - p.z) < 5.5) damageEnemy(q, 12 * S.up.parry * st.dmg, { pierce: true, kb: 9 }); }
       return 'parry';
     }
-    p.en -= dmg * 1.3; p.enDelay = 0.9; sfx('block'); addShake(0.25);
+    p.en -= dmg * 0.8; p.enDelay = 0.7; sfx('block'); addShake(0.25);
     emit(lerp(p.x, e.x, 0.3), 1.5, lerp(p.z, e.z, 0.3), 12, { color: [1, 0.9, 0.6], speed: 6, life: 0.3, size: 0.16 });
     if (st.thorn) damageEnemy(e, 8 * st.thorn * st.dmg, { pierce: true, kb: 2 });
-    if (p.en < 0) { p.en = 0; p.stun = 0.5; p.blocking = false; playerHurt(dmg * 0.5, e); banner('GUARD BROKEN', '', 1); return 'hit'; }
-    hint('parry', 'Good block! Raise your guard <b>just before</b> a hit lands to <b>PARRY</b> and stun the beast');
+    if (p.en < 0) { p.en = 0; p.stun = 0.4; p.blocking = false; playerHurt(dmg * 0.3, e); banner('GUARD BROKEN', '', 1); return 'hit'; }
+    hintDone('block'); hint('parry', 'Good block! Raise your guard <b>just before</b> a hit lands to <b>PARRY</b> and stun the beast');
     return 'block';
   }
   playerHurt(dmg, e); return 'hit';
@@ -250,8 +250,8 @@ function fireShot(e, tx, ty, tz, speed, dmg, spread = 0) {
 // ---------------- enemies ----------------
 function spawnEnemy(kind, x, z, o = {}) {
   const d = ENEMY[kind], vis = makeEnemyVisual(kind, YAW_FIX[kind]), w = Math.max(1, S.wave);
-  const elite = !!o.elite, hpMul = (1 + 0.09 * (w - 1)) * (S.trial === 'swarm' ? 0.6 : 1) * (elite ? 1.9 : 1) * (d.boss ? 1 + 0.25 * (w / 5 - 1) : 1);
-  const e = { kind, d, x, z, y: d.hover, vx: 0, vz: 0, kx: 0, kz: 0, hp: d.hp * hpMul, maxHp: d.hp * hpMul, dmg: d.dmg * (1 + 0.05 * (w - 1)) * (elite ? 1.3 : 1), state: o.idle ? 'idle' : 'spawn', t: 0, cd: 0.8 + Math.random() * 1.2, obj: vis.obj, mats: vis.mats, yaw: Math.atan2(p.x - x, p.z - z), stagger: 0, flash: 0, glow: 1, orbit: Math.random() < 0.5 ? -1 : 1, seed: Math.random() * 10, hitDone: false, elite, pattern: 0, summoned: false, dead: false, deathT: 0, hitT: 0, lx: 0, lz: 0, sc: elite ? 1.22 : 1, strikes: 0 };
+  const elite = !!o.elite, hpMul = d.boss ? 1 + 0.22 * (w / 5 - 1) : (1 + 0.09 * (w - 1)) * (S.trial === 'swarm' ? 0.6 : 1) * (elite ? 1.9 : 1), early = w <= 4 ? 0.55 + 0.1 * w : 1;
+  const e = { kind, d, x, z, y: d.hover, vx: 0, vz: 0, kx: 0, kz: 0, hp: d.hp * hpMul, maxHp: d.hp * hpMul, dmg: d.dmg * (d.boss ? 1 + 0.08 * (w / 5 - 1) : (1 + 0.05 * (w - 1)) * early) * (elite ? 1.3 : 1), state: o.idle ? 'idle' : 'spawn', t: 0, cd: 0.8 + Math.random() * 1.2, obj: vis.obj, mats: vis.mats, yaw: Math.atan2(p.x - x, p.z - z), stagger: 0, flash: 0, glow: 1, orbit: Math.random() < 0.5 ? -1 : 1, seed: Math.random() * 10, hitDone: false, elite, pattern: 0, summoned: false, dead: false, deathT: 0, hitT: 0, lx: 0, lz: 0, sc: elite ? 1.22 : 1, strikes: 0 };
   e.obj.rotation.order = 'YXZ'; e.obj.position.set(x, e.y, z); e.obj.scale.setScalar(0.01);
   if (elite) for (const m of e.mats) m.userData.u.uTint.value.set(1.5, 1.1, 0.6);
   G.scene.add(e.obj); enemies.push(e);
@@ -274,7 +274,7 @@ function updateEnemy(e, dt) {
     if (e.state === 'chase') {
       e.cd -= dt; const tang = dist < 8 ? 0.65 : 0.2; tvx = (nx - nz * tang * e.orbit) * sp; tvz = (nz + nx * tang * e.orbit) * sp;
       if (dist < 3) { tvx -= nx * sp; tvz -= nz * sp; }
-      if (dist < 6.5 && e.cd <= 0 && meleeBusy() < 2) { e.state = 'windup'; e.t = 0; sfx('tele'); }
+      if (dist < 6.5 && e.cd <= 0 && meleeBusy() < (S.wave < 5 ? 1 : S.wave < 11 ? 2 : 3)) { e.state = 'windup'; e.t = 0; sfx('tele'); if (!save.tut.block && save.tut.slash) { hint('block', S.touch ? 'It is about to pounce — hold <b>BLOCK</b>!' : 'It is about to pounce — hold <b>Right-Click</b> to <b>BLOCK</b>!'); S.slowT = 0.9; } }
     } else if (e.state === 'windup') { tvx = -nx * 2; tvz = -nz * 2; glow = 2.1 + Math.sin(e.t * 40) * 0.5; pitch = -0.45; if (e.t > (d.wind || 0.45)) { e.state = 'lunge'; e.t = 0; e.lx = nx; e.lz = nz; e.hitDone = false; } }
     else if (e.state === 'lunge') { e.vx = e.lx * 19; e.vz = e.lz * 19; tvx = e.vx; tvz = e.vz; glow = 2; pitch = 0.35; face = false; if (!e.hitDone && dist < 1.7) { e.hitDone = true; strikePlayer(e, e.dmg); } if (e.t > 0.34) { e.state = 'recover'; e.t = 0; } }
     else if (e.state === 'recover') { tvx = -nx * 1.5; tvz = -nz * 1.5; if (e.t > 0.75) { e.state = 'chase'; e.t = 0; e.cd = 1 + Math.random() * 1.4; } }
@@ -287,14 +287,14 @@ function updateEnemy(e, dt) {
     if (e.state === 'chase') { const want = 12, rad = clamp((dist - want) * 0.6, -1, 1); tvx = (nx * rad - nz * 0.7 * e.orbit) * sp; tvz = (nz * rad + nx * 0.7 * e.orbit) * sp; if (e.cd <= 0 && dist < 22) { e.state = 'windup'; e.t = 0; sfx('tele'); } if (Math.sin(G.time * 0.4 + e.seed) > 0.97) e.orbit *= -1; }
     else if (e.state === 'windup') { glow = 2.1 + Math.sin(e.t * 40) * 0.5; if (e.t > 0.5) { { const nv = d.volley || 1; for (let i = 0; i < nv; i++) fireShot(e, p.x, 1.35, p.z, 13 + Math.min(6, S.wave * 0.3), e.dmg, (i - (nv - 1) / 2) * 0.2); } hint('deflect', 'Spore incoming! <b>Slash</b> or <b>block</b> it to send it back'); e.state = 'chase'; e.t = 0; e.cd = (S.trial === 'storm' ? 1.7 : 2.7) + Math.random() * 0.8; } }
   } else if (d.boss) {
-    if (!e.summoned && e.hp < e.maxHp * 0.5) { e.summoned = true; e.enraged = true; banner('THE TYRANT ENRAGES', '', 1.6); sfx('boss'); for (let i = 0; i < 3; i++) { const a = Math.random() * TAU; S.queue.push('wraith'); } }
+    if (!e.summoned && e.hp < e.maxHp * 0.5) { e.summoned = true; e.enraged = true; banner('THE TYRANT ENRAGES', '', 1.6); sfx('boss'); for (let i = 0; i < 3; i++) { const a = Math.random() * TAU; S.queue.push(d.adds || 'wraith'); } }
     if (e.state === 'chase') {
       e.cd -= dt; tvx = nx * sp; tvz = nz * sp;
-      if (e.cd <= 0) { const r = (e.pattern++) % 3; if (dist < 6.2) { e.state = 'sweepW'; e.strikes = 0; } else if (r === 1) e.state = 'volleyW'; else e.state = 'chargeW'; e.t = 0; sfx('bossTele'); }
-    } else if (e.state === 'sweepW') { glow = 2.1 + Math.sin(e.t * 30) * 0.5; pitch = -0.3; tvx = nx * 1.5; tvz = nz * 1.5; const need = e.strikes === 0 ? 0.7 : 0.45; if (e.t > need) { e.strikes++; e.t = 0; ring(e.x + nx * 3, 1.2, e.z + nz * 3, 0.5, 5, 0.3, 0xb070ff); addShake(0.3); sfx('swing', 0.6); let res = 'miss'; if (dist < 6.6) res = strikePlayer(e, e.dmg); if (res === 'parry' || e.strikes >= 2) { if (res !== 'parry') { e.state = 'recover'; e.t = 0; } } } }
+      if (e.cd <= 0) { const r = (e.pattern++) % 3; if (dist < 6.2) { e.state = 'sweepW'; e.strikes = 0; ring(e.x, 0.12, e.z, 6.6, 1.2, 0.7, 0xff5a8a); } else if (r === 1) e.state = 'volleyW'; else e.state = 'chargeW'; e.t = 0; sfx('bossTele'); }
+    } else if (e.state === 'sweepW') { glow = 2.1 + Math.sin(e.t * 30) * 0.5; pitch = -0.3; tvx = nx * 1.5; tvz = nz * 1.5; const need = e.strikes === 0 ? 0.9 : 0.55; if (e.t > need) { e.strikes++; e.t = 0; ring(e.x + nx * 3, 1.2, e.z + nz * 3, 0.5, 5, 0.3, 0xb070ff); addShake(0.3); sfx('swing', 0.6); let res = 'miss'; if (dist < 6.6) res = strikePlayer(e, e.dmg * 0.8); if (res === 'parry' || e.strikes >= 2) { if (res !== 'parry') { e.state = 'recover'; e.t = 0; } } } }
     else if (e.state === 'chargeW') { glow = 2.1 + Math.sin(e.t * 40) * 0.5; pitch = -0.35; if (e.t > 0.9) { e.state = 'charge'; e.t = 0; e.lx = nx; e.lz = nz; e.hitDone = false; sfx('dash'); } }
     else if (e.state === 'charge') { e.vx = e.lx * 24; e.vz = e.lz * 24; tvx = e.vx; tvz = e.vz; pitch = 0.4; glow = 2; face = false; emit(e.x, 0.6, e.z, 3, { color: d.glow, speed: 3, life: 0.5, size: 0.3 }); if (!e.hitDone && dist < 3) { e.hitDone = true; strikePlayer(e, e.dmg * 1.3); } if (e.t > 0.6) { e.state = 'recover'; e.t = 0; } }
-    else if (e.state === 'volleyW') { glow = 2.1 + Math.sin(e.t * 40) * 0.5; if (e.t > 0.7) { const n = e.enraged ? 7 : 5; for (let i = 0; i < n; i++) fireShot(e, p.x, 1.35, p.z, 15, e.dmg * 0.6, (i - (n - 1) / 2) * 0.16); e.state = 'recover'; e.t = 0.5; } }
+    else if (e.state === 'volleyW') { glow = 2.1 + Math.sin(e.t * 40) * 0.5; if (e.t > 0.7) { const n = (d.volley || 5) + (e.enraged ? 2 : 0); for (let i = 0; i < n; i++) fireShot(e, p.x, 1.35, p.z, 14, e.dmg * 0.45, (i - (n - 1) / 2) * 0.16); e.state = 'recover'; e.t = 0.5; } }
     else if (e.state === 'recover') { glow = 0.5; pitch = 0.25; if (e.t > 1.3) { e.state = 'chase'; e.t = 0; e.cd = e.enraged ? 0.5 : 1; } }
   }
   // integrate
@@ -350,6 +350,7 @@ function startWave(n) {
   if (S.rng() < 0.999 && n >= 7 && !boss) S.eliteAt = Math.floor(S.rng() * S.queue.length); else S.eliteAt = -1;
   banner(boss ? 'RIFT TYRANT' : 'WAVE ' + n, boss ? 'Parry its blades. Dash through its charge.' : n === 1 ? 'Clear the beasts' : '', 2.2);
   if (boss) sfx('boss');
+  if (boss && S.queue[0] === 'tyrant2') banner('VENOM TYRANT', 'Faster. Meaner. Deflect its storm.', 2.2);
   if (n === 2) hint('heavy', S.touch ? '<b>Hold SLASH</b> to charge a heavy strike' : '<b>Hold Left-Click</b> to charge a heavy strike');
   if (n === 3) hint('dash', S.touch ? 'Tap <b>DASH</b> to dodge through attacks' : 'Press <b>Space</b> to dash through attacks');
 }
@@ -359,12 +360,12 @@ function updateWaves(dt) {
   S.spawnT -= dt;
   if (S.queue.length && S.spawnT <= 0 && alive < cap) {
     const kind = S.queue.shift(); let x, z, tries = 0;
-    do { const a = Math.random() * TAU, r = kind === 'tyrant' ? 16 : R - 3 - Math.random() * 4; x = Math.cos(a) * r; z = Math.sin(a) * r; } while (Math.hypot(x - p.x, z - p.z) < 9 && tries++ < 20);
-    spawnEnemy(kind, x, z, { elite: S.queue.length === S.eliteAt && kind !== 'tyrant' }); S.spawnT = S.wave < 3 ? 1.1 : 0.6; return;
+    do { const a = Math.random() * TAU, r = ENEMY[kind].boss ? 16 : R - 3 - Math.random() * 4; x = Math.cos(a) * r; z = Math.sin(a) * r; } while (Math.hypot(x - p.x, z - p.z) < 9 && tries++ < 20);
+    spawnEnemy(kind, x, z, { elite: S.queue.length === S.eliteAt && kind !== 'tyrant' }); S.spawnT = S.wave < 5 ? 1.5 : S.wave < 10 ? 0.9 : 0.6; return;
   }
   if (!S.queue.length && alive === 0) {
-    S.waveActive = false; S.betweenT = 1.6; S.slowT = 0.6; sfx('wave'); p.hp = Math.min(p.maxHp, p.hp + 15);
-    S.score += 200 * S.wave; banner('WAVE ' + S.wave + ' CLEARED', '+15 integrity', 1.6);
+    S.waveActive = false; S.betweenT = 1.6; S.slowT = 0.6; sfx('wave'); const heal = 25 + 10 * arm('ward'); p.hp = Math.min(p.maxHp, p.hp + heal);
+    S.score += 200 * S.wave; banner('WAVE ' + S.wave + ' CLEARED', '+' + heal + ' integrity', 1.6);
     if (S.wave % 5 === 0) { S.biome++; setBiome(S.biome); }
     if (S.daily && S.wave === 5 && !save.daily.done) { save.daily.done = true; save.dailyClears++; S.runShards += 40; }
     hintDone('move');
@@ -404,7 +405,7 @@ function startRun(daily) {
   Object.assign(S, { score: 0, combo: 0, kills: 0, runShards: 0, up: {}, rerolls: arm('reroll'), windUsed: false, biome: 0, bossRef: null, timeScale: 1, slowT: 0, hitStop: 0, shake: 0, betweenT: 0 });
   Object.assign(p, { x: 0, z: 9, yaw: 0, pitch: 0, vx: 0, vz: 0, maxHp: 100, hp: 100, maxEn: 100, en: 100, burst: 0, swing: null, comboStep: 0, chargeT: 0, charged: false, blocking: false, stun: 0, inv: 0, dashT: 0, dashCharges: 1, moved: 0 });
   for (let i = 0; i < arm('head'); i++) { const u = UPGRADES[Math.floor(S.rng() * UPGRADES.length)]; if (u.id !== 'wind') S.up[u.id] = (S.up[u.id] || 0) + 1; }
-  calcStats(); p.hp = p.maxHp; p.en = p.maxEn; p.dashCharges = p.dashMax; setBiome(0);
+  calcStats(); p.hp = p.maxHp; p.en = p.maxEn; p.dashCharges = p.dashMax; p.burst = 50 * arm('primed'); setBiome(0);
   setBladeColor(BLADES.find((b) => b.id === save.blade).color);
   for (const id of ['menu', 'over', 'armory', 'pause', 'upg']) show(id, false); show('hud', true); document.body.classList.add('ingame');
   S.state = 'playing'; save.runs++; persist(); lockPointer(); platform.gameplayStart(); startWave(1);
@@ -422,8 +423,13 @@ function gameOver() {
   persist(); const nr = rankOf(save.xp);
   $('overStats').innerHTML = '<div><b>' + S.wave + '</b><span>Wave reached' + (newBest ? ' — NEW BEST' : '') + '</span></div><div><b>' + S.kills + '</b><span>Beasts slain</span></div><div><b>' + Math.floor(S.score) + '</b><span>Score</span></div><div><b>◆ ' + earned + '</b><span>Shards earned</span></div>';
   const next = RANKS[nr + 1];
-  $('overRank').innerHTML = (nr > oldRank ? '<b class="gold">RANK UP! </b>' : '') + 'Rank: <b>' + RANKS[nr].name + '</b>' + (next ? ' — ' + (next.xp - save.xp) + ' XP to ' + next.name : '');
+  $('overRank').innerHTML = (nr > oldRank ? '<b class="gold">RANK UP! </b>' : '') + 'Rank: <b>' + RANKS[nr].name + '</b>' + (next ? ' — ' + (next.xp - save.xp) + ' XP to ' + next.name : '') + '<br>' + nextGoal();
   show('hud', false); show('hint', false); S.hintId = null; show('over', true); document.body.classList.remove('ingame'); if (nr > oldRank || newBest) platform.happytime();
+}
+function nextGoal() {
+  let best = null; for (const a of ARMORY) { const lv = arm(a.id); if (lv >= a.max) continue; const c = a.cost[lv]; if (!best || c < best.c) best = { a, c }; }
+  if (!best) return 'Armory complete — chase a higher wave!';
+  return save.shards >= best.c ? '<b class="gold">You can afford ' + best.a.name + '</b> — visit the Armory' : '◆ ' + (best.c - save.shards) + ' more shards to unlock <b>' + best.a.name + '</b>';
 }
 function toMenu() {
   clearWorld(); S.state = 'menu'; S.wave = 0; S.waveActive = false; for (const id of ['over', 'armory', 'pause', 'hud', 'upg']) show(id, false); document.body.classList.remove('ingame');
@@ -492,7 +498,7 @@ function updatePlayer(dt) {
   const wantBlock = inp.block && p.stun <= 0 && !(p.swing && p.swing.t / p.swing.dur < 0.6);
   if (wantBlock && !p.blocking) { p.blocking = true; p.blockT = 0; if (p.swing) p.swing = null; p.chargeT = 0; p.charged = false; }
   else if (!wantBlock) p.blocking = false;
-  if (p.blocking) { p.blockT += dt; p.en -= 6 * dt; p.enDelay = Math.max(p.enDelay, 0.3); if (p.en <= 0) { p.en = 0; p.blocking = false; } }
+  if (p.blocking) { p.blockT += dt; p.en -= 3 * dt; p.enDelay = Math.max(p.enDelay, 0.3); if (p.en <= 0) { p.en = 0; p.blocking = false; } }
   // energy
   p.enDelay -= dt; if (p.enDelay <= 0 && !p.blocking) p.en = Math.min(p.maxEn, p.en + 24 * st.regen * dt);
   // attacks
