@@ -14,7 +14,7 @@ const ASSETS = [
   ['assets/models/wraith.glb', 'wraith.glb'], ['assets/models/brute.glb', 'brute.glb'], ['assets/models/stinger.glb', 'stinger.glb'],
   ['assets/models/tyrant.glb', 'tyrant.glb'], ['assets/models/hilt.glb', 'hilt.glb'], ['assets/img/sky.jpg', 'sky.jpg'], ['assets/img/floor.jpg', 'floor.jpg'],
 ];
-const FONTS = [['node_modules/@fontsource/chakra-petch/files/chakra-petch-latin-500-normal.woff2', 'cp500.woff2'], ['node_modules/@fontsource/chakra-petch/files/chakra-petch-latin-700-normal.woff2', 'cp700.woff2']];
+const FONTS = [['assets/img/bg.jpg', 'bg.jpg'], ['node_modules/@fontsource/chakra-petch/files/chakra-petch-latin-500-normal.woff2', 'cp500.woff2'], ['node_modules/@fontsource/chakra-petch/files/chakra-petch-latin-700-normal.woff2', 'cp700.woff2']];
 const mime = (f) => f.endsWith('.glb') ? 'model/gltf-binary' : f.endsWith('.jpg') ? 'image/jpeg' : 'font/woff2';
 
 for (const plat of Object.keys(SDK)) {
@@ -27,7 +27,7 @@ for (const plat of Object.keys(SDK)) {
     const map = {}; for (const [src, name] of ASSETS) map[name] = 'data:' + mime(name) + ';base64,' + fs.readFileSync(path.join(root, src)).toString('base64');
     fs.writeFileSync(path.join(out, 'assets.js'), 'window.EW_ASSETS=' + JSON.stringify(map) + ';');
     html = html.replace('<!--ASSETS-->', '<script src="assets.js"></script>');
-    for (const [src, name] of FONTS) css = css.replace('url(' + name + ')', 'url(data:font/woff2;base64,' + fs.readFileSync(path.join(root, src)).toString('base64') + ')');
+    for (const [src, name] of FONTS) css = css.replace('url(' + name + ')', 'url(data:' + mime(name) + ';base64,' + fs.readFileSync(path.join(root, src)).toString('base64') + ')');
   } else {
     html = html.replace('<!--ASSETS-->', '');
     for (const [src, name] of [...ASSETS, ...FONTS]) fs.copyFileSync(path.join(root, src), path.join(out, name));
