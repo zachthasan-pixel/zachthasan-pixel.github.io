@@ -61,7 +61,7 @@ function glowMat(map, glow, swz) {
       .replace('#include <emissivemap_fragment>', `
         #ifdef USE_MAP
           vec3 emc = texture2D( map, vMapUv ).rgb;
-          if ( uSwz > 1.5 ) { emc = emc.grb; diffuseColor.rgb = diffuseColor.grb; } else if ( uSwz > 0.5 ) { emc = emc.gbr; diffuseColor.rgb = diffuseColor.gbr; }
+          if ( uSwz > 1.5 ) { emc = vec3( max( emc.r, emc.g ), emc.b, emc.b * 0.8 ); diffuseColor.rgb = vec3( max( diffuseColor.r, diffuseColor.g ), diffuseColor.b, diffuseColor.b * 0.8 ); } else if ( uSwz > 0.5 ) { emc = emc.gbr; diffuseColor.rgb = diffuseColor.gbr; }
           float emx = max( emc.r, max( emc.g, emc.b ) ); float emn = min( emc.r, min( emc.g, emc.b ) );
           float eg = smoothstep( 0.22, 0.6, emx - emn ) * smoothstep( 0.25, 0.75, emx );
           totalEmissiveRadiance += emc * ( eg * uGlow * 1.1 + 0.12 + uFlash * 2.0 ) + vec3( uFlash * 0.35 );

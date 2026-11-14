@@ -10,7 +10,7 @@ export async function launch() {
 }
 // Opens a build; returns { pg, errs, reqs, close }. opts: { build, w, h, ctx (context options), init (fn run before page scripts), route (fn(pg)) , manual }
 export async function open(o = {}) {
-  const dir = path.resolve('builds', o.build || 'itch'); const port = 8700 + Math.floor(Math.random() * 200);
+  const dir = path.resolve(process.env.EW_OUT || 'builds', o.build || 'itch'); const port = 8700 + Math.floor(Math.random() * 200);
   const srv = await serve(dir, port); const b = await launch();
   const ctx = await b.newContext(Object.assign({ viewport: { width: o.w || 1280, height: o.h || 720 }, deviceScaleFactor: o.dsf || 1 }, o.ctx || {}));
   const pg = await ctx.newPage(); const errs = [], reqs = [];

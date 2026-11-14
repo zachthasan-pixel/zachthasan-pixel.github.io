@@ -2,3 +2,5 @@ node_modules/
 builds/
 *_raw.glb
 shots/
+builds2/
+video-frames/

@@ -18,7 +18,7 @@ const FONTS = [['assets/img/bg.jpg', 'bg.jpg'], ['node_modules/@fontsource/chakr
 const mime = (f) => f.endsWith('.glb') ? 'model/gltf-binary' : f.endsWith('.jpg') ? 'image/jpeg' : 'font/woff2';
 
 for (const plat of Object.keys(SDK)) {
-  const out = path.join(root, 'builds', plat); fs.rmSync(out, { recursive: true, force: true }); fs.mkdirSync(out, { recursive: true });
+  const out = path.join(root, process.env.EW_OUT || 'builds', plat); fs.rmSync(out, { recursive: true, force: true }); fs.mkdirSync(out, { recursive: true });
   await build({ entryPoints: [path.join(root, 'src/main.js')], bundle: true, format: 'iife', minify: !test, outfile: path.join(out, 'game.js'), target: 'es2019', logLevel: 'warning',
     define: { __PLATFORM__: JSON.stringify(plat === 'itch-offline' ? 'itch' : plat), __TEST__: test ? 'true' : 'false' } });
   let html = fs.readFileSync(path.join(root, 'src/index.html'), 'utf8').replace('<!--SDK-->', SDK[plat]);
