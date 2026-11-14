@@ -25,6 +25,7 @@ for (let f = 0; f < N; f++) {
   if (f === 330) await pg.evaluate(() => { const g = window.__ew; g.jumpWave(5); g.p.x = 0; g.p.z = 14; g.p.yaw = 0; });
   await pg.evaluate(() => { window.vstep(4); window.__ew.render(); });
   await pg.screenshot({ path: `${dir}/f${String(f).padStart(4, '0')}.jpg`, quality: 92, type: 'jpeg' });
+  if (mode === 'land' && [60, 150, 256, 300, 400, 470].includes(f)) await pg.screenshot({ path: `store-art/screenshot-${[60, 150, 256, 300, 400, 470].indexOf(f) + 1}-1280x720.png` });
   if (f % 30 === 0) console.log(mode, f, new Date().toISOString().slice(11, 19));
 }
 console.log('errs', t.errs.length); await t.close();

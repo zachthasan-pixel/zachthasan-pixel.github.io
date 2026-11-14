@@ -15,7 +15,7 @@ export const UPGRADES = [
   { id: 'edge', name: 'Keen Edge', icon: '⚔', desc: '+20% blade damage', max: 6 },
   { id: 'reach', name: 'Long Reach', icon: '↔', desc: '+15% blade reach', max: 4 },
   { id: 'swift', name: 'Swift Hands', icon: '≫', desc: '+15% swing speed', max: 4 },
-  { id: 'vital', name: 'Vital Core', icon: '✚', desc: '+25 max integrity and heal 25', max: 6 },
+  { id: 'vital', name: 'Vital Core', icon: '✚', desc: '+25 max integrity, and heal 25', max: 6 },
   { id: 'leech', name: 'Leech Blade', icon: '❤', desc: 'Heal 2 integrity per kill', max: 4 },
   { id: 'reserve', name: 'Deep Reserves', icon: '▰', desc: '+30 max energy', max: 4 },
   { id: 'recover', name: 'Quick Recovery', icon: '⟳', desc: '+35% energy regeneration', max: 4 },

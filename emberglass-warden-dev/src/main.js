@@ -34,7 +34,7 @@ function calcStats() {
   const u = (id) => S.up[id] || 0;
   st.dmg = (1 + 0.2 * u('edge')) * (1 + 0.06 * arm('hone')) * (S.trial === 'glass' ? 2 : 1);
   st.reach = 1 + 0.15 * u('reach'); st.swing = 1 + 0.15 * u('swift'); st.regen = (1 + 0.35 * u('recover')) * (S.trial === 'drain' ? 0.4 : 1);
-  st.parry = 0.2 * (1 + 0.4 * u('parry')); st.burstRate = (1 + 0.4 * u('battery')) * (S.trial === 'surge' ? 3 : 1); st.nova = 1 + 0.35 * u('nova');
+  st.parry = 0.28 * (1 + 0.35 * u('parry')); st.burstRate = (1 + 0.4 * u('battery')) * (S.trial === 'surge' ? 3 : 1); st.nova = 1 + 0.35 * u('nova');
   st.chain = u('chain'); st.reflect = 1 + u('reflect'); st.heavyMul = (1 + 0.3 * u('heavy')) * (S.trial === 'heavy' ? 2 : 1); st.heavyRate = 1 + 0.3 * u('heavy');
   st.shard = (1 + 0.5 * u('magnet')) * (1 + 0.1 * arm('lens')); st.thorn = u('thorn'); st.leech = u('leech');
   const mh = 100 + 10 * arm('hull') + 25 * u('vital'), me = 100 + 10 * arm('cap') + 30 * u('reserve');
@@ -132,7 +132,7 @@ function addCombo() { S.combo++; S.comboT = 4; }
 function damageEnemy(e, dmg, o = {}) {
   if (e.dead || e.state === 'spawn') return false;
   let armored = false;
-  if (e.kind === 'brute' && !o.heavy && !o.pierce && e.stagger <= 0 && e.state !== 'recover') { dmg *= 0.45; armored = true; }
+  if (e.kind === 'brute' && !o.heavy && !o.pierce && e.stagger <= 0 && e.state !== 'recover') { dmg *= 0.3; armored = true; }
   if (e.stagger > 0) dmg *= 1.5;
   e.hp -= dmg; e.flash = 1; e.hitT = 0.25;
   const kb = (o.kb || 4) / (e.d.boss ? 6 : e.kind === 'brute' ? 2.5 : 1), dx = e.x - p.x, dz = e.z - p.z, l = Math.hypot(dx, dz) || 1;
@@ -156,7 +156,7 @@ function killEnemy(e, o = {}) {
   if (e.d.boss) { hitStop(0.18); S.slowT = 1.2; addShake(1); save.bosses++; persist(); platform.happytime(); for (const s of shots) s.life = 0; }
   if (st.chain && !o.chained) {
     let best = null, bd = 9; for (const q of enemies) { if (q.dead || q === e || q.state === 'spawn') continue; const d = Math.hypot(q.x - e.x, q.z - e.z); if (d < bd) { bd = d; best = q; } }
-    if (best) { for (let i = 0; i <= 8; i++) emit(lerp(e.x, best.x, i / 8), lerp(e.y, best.y, i / 8), lerp(e.z, best.z, i / 8), 2, { color: [0.6, 0.9, 1], speed: 1.5, life: 0.25, size: 0.2, grav: 0 }); damageEnemy(best, 14 * st.chain * st.dmg, { chained: true, pierce: true, kb: 2 }); }
+    if (best) { for (let i = 0; i <= 8; i++) emit(lerp(e.x, best.x, i / 8), lerp(e.y, best.y, i / 8), lerp(e.z, best.z, i / 8), 2, { color: [0.6, 0.9, 1], speed: 1.5, life: 0.25, size: 0.2, grav: 0 }); damageEnemy(best, 26 * st.chain * st.dmg, { chained: true, pierce: true, kb: 2 }); }
   }
 }
 function spawnPickup(x, y, z, val) {
@@ -186,7 +186,7 @@ function strikePlayer(e, dmg) {
       emit(lerp(p.x, e.x, 0.4), 1.5, lerp(p.z, e.z, 0.4), 30, { color: [1, 0.95, 0.7], speed: 10, life: 0.4, size: 0.2 });
       ring(lerp(p.x, e.x, 0.4), 1.5, lerp(p.z, e.z, 0.4), 0.2, 2.2, 0.3, 0xfff2c0, true);
       dmgNum(e.x, e.y + 1, e.z, 'PARRY!', 'gold'); hintDone('block'); hintDone('parry'); if (arm('riposte')) damageEnemy(e, 22 * arm('riposte') * st.dmg, { pierce: true, heavy: true, kb: 3 });
-      if (S.up.parry) { ring(p.x, 0.1, p.z, 0.5, 5.5, 0.4, 0xfff2c0); for (const q of enemies) if (!q.dead && Math.hypot(q.x - p.x, q.z - p.z) < 5.5) damageEnemy(q, 12 * S.up.parry * st.dmg, { pierce: true, kb: 9 }); }
+      if (S.up.parry) { ring(p.x, 0.1, p.z, 0.5, 5.5, 0.4, 0xfff2c0); for (const q of enemies) if (!q.dead && Math.hypot(q.x - p.x, q.z - p.z) < 5.5) { if (!q.d.boss && q !== e) q.stagger = Math.max(q.stagger, 0.6); damageEnemy(q, 26 * S.up.parry * st.dmg, { pierce: true, kb: 9 }); } }
       return 'parry';
     }
     p.en -= dmg * 0.8; p.enDelay = 0.7; sfx('block'); addShake(0.25);
@@ -217,7 +217,7 @@ function startSwing(type) {
 function swingHit() {
   const sw = p.swing, heavy = sw.type === 'heavy', big = heavy || sw.type === 3;
   const reach = (big ? 3.7 : 3.2) * st.reach, cone = big ? 1.25 : 0.95;
-  let dmg = 13 * st.dmg * (heavy ? 2.6 * st.heavyMul : sw.type === 3 ? 1.6 : 1), any = false;
+  let dmg = 13 * st.dmg * (heavy ? 4 * st.heavyMul : sw.type === 3 ? 1.6 : 1), any = false;
   for (const e of enemies) {
     if (e.dead) continue; const dx = e.x - p.x, dz = e.z - p.z, d = Math.hypot(dx, dz);
     if (d - e.d.radius > reach) continue;
@@ -251,7 +251,7 @@ function fireShot(e, tx, ty, tz, speed, dmg, spread = 0) {
 function spawnEnemy(kind, x, z, o = {}) {
   const d = ENEMY[kind], vis = makeEnemyVisual(kind, YAW_FIX[kind]), w = Math.max(1, S.wave);
   const elite = !!o.elite, hpMul = d.boss ? 1 + 0.22 * (w / 5 - 1) : (1 + 0.09 * (w - 1)) * (S.trial === 'swarm' ? 0.6 : 1) * (elite ? 1.9 : 1), early = w <= 4 ? 0.55 + 0.1 * w : 1;
-  const e = { kind, d, x, z, y: d.hover, vx: 0, vz: 0, kx: 0, kz: 0, hp: d.hp * hpMul, maxHp: d.hp * hpMul, dmg: d.dmg * (d.boss ? 1 + 0.08 * (w / 5 - 1) : (1 + 0.05 * (w - 1)) * early) * (elite ? 1.3 : 1), state: o.idle ? 'idle' : 'spawn', t: 0, cd: 0.8 + Math.random() * 1.2, obj: vis.obj, mats: vis.mats, yaw: Math.atan2(p.x - x, p.z - z), stagger: 0, flash: 0, glow: 1, orbit: Math.random() < 0.5 ? -1 : 1, seed: Math.random() * 10, hitDone: false, elite, pattern: 0, summoned: false, dead: false, deathT: 0, hitT: 0, lx: 0, lz: 0, sc: elite ? 1.22 : 1, strikes: 0 };
+  const e = { kind, d, x, z, y: d.hover, vx: 0, vz: 0, kx: 0, kz: 0, hp: d.hp * hpMul, maxHp: d.hp * hpMul, dmg: d.dmg * (d.boss ? 1 + 0.08 * (w / 5 - 1) : Math.min(2.2, 1 + 0.05 * (w - 1)) * early) * (elite ? 1.3 : 1), state: o.idle ? 'idle' : 'spawn', t: 0, cd: 0.8 + Math.random() * 1.2, obj: vis.obj, mats: vis.mats, yaw: Math.atan2(p.x - x, p.z - z), stagger: 0, flash: 0, glow: 1, orbit: Math.random() < 0.5 ? -1 : 1, seed: Math.random() * 10, hitDone: false, elite, pattern: 0, summoned: false, dead: false, deathT: 0, hitT: 0, lx: 0, lz: 0, sc: elite ? 1.22 : 1, strikes: 0 };
   e.obj.rotation.order = 'YXZ'; e.obj.position.set(x, e.y, z); e.obj.scale.setScalar(0.01);
   if (elite) for (const m of e.mats) m.userData.u.uTint.value.set(1.5, 1.1, 0.6);
   G.scene.add(e.obj); enemies.push(e);
@@ -273,7 +273,7 @@ function updateEnemy(e, dt) {
   else if (d.model === 'wraith') {
     if (e.state === 'chase') {
       e.cd -= dt; const tang = dist < 8 ? 0.65 : 0.2; tvx = (nx - nz * tang * e.orbit) * sp; tvz = (nz + nx * tang * e.orbit) * sp;
-      if (dist < 3) { tvx -= nx * sp; tvz -= nz * sp; }
+      if (dist < 3.6) { tvx -= nx * sp * 1.2; tvz -= nz * sp * 1.2; }
       if (dist < 6.5 && e.cd <= 0 && meleeBusy() < (S.wave < 5 ? 1 : S.wave < 11 ? 2 : 3)) { e.state = 'windup'; e.t = 0; sfx('tele'); if (!save.tut.block && save.tut.slash) { hint('block', S.touch ? 'It is about to pounce — hold <b>BLOCK</b>!' : 'It is about to pounce — hold <b>Right-Click</b> to <b>BLOCK</b>!'); S.slowT = 0.9; } }
     } else if (e.state === 'windup') { tvx = -nx * 2; tvz = -nz * 2; glow = 2.1 + Math.sin(e.t * 40) * 0.5; pitch = -0.45; if (e.t > (d.wind || 0.45)) { e.state = 'lunge'; e.t = 0; e.lx = nx; e.lz = nz; e.hitDone = false; } }
     else if (e.state === 'lunge') { e.vx = e.lx * 19; e.vz = e.lz * 19; tvx = e.vx; tvz = e.vz; glow = 2; pitch = 0.35; face = false; if (!e.hitDone && dist < 1.7) { e.hitDone = true; strikePlayer(e, e.dmg); } if (e.t > 0.34) { e.state = 'recover'; e.t = 0; } }
@@ -389,8 +389,7 @@ function openUpgrades() {
 }
 function pickUpgrade(i) {
   const u = offer[i]; if (!u || S.state !== 'upgrade') return;
-  S.up[u.id] = (S.up[u.id] || 0) + 1; if (u.id === 'vital') p.hp = Math.min(p.maxHp + 25, p.hp + 25);
-  calcStats(); sfx('pick'); show('upg', false); S.state = 'playing'; platform.gameplayStart(); lockPointer(); startWave(S.wave + 1);
+  S.up[u.id] = (S.up[u.id] || 0) + 1;   calcStats(); sfx('pick'); show('upg', false); S.state = 'playing'; platform.gameplayStart(); lockPointer(); startWave(S.wave + 1);
 }
 $('cards').addEventListener('click', (e) => { const c = e.target.closest('.card'); if (c) pickUpgrade(+c.dataset.i); });
 $('reroll').addEventListener('click', () => { if (S.rerolls > 0) { S.rerolls--; sfx('ui'); rollOffer(); drawOffer(); } });
@@ -482,7 +481,7 @@ function updatePlayer(dt) {
   // dash
   if (p.dashCharges < p.dashMax) { p.dashRe -= dt; if (p.dashRe <= 0) { p.dashCharges++; p.dashRe = 1.1; } }
   if (inp.dash && p.dashT <= 0 && p.dashCharges > 0 && p.en >= 18 && p.stun <= 0) {
-    p.dashCharges--; if (p.dashCharges === p.dashMax - 1) p.dashRe = 1.1; p.en -= 18; p.enDelay = 0.5; p.dashT = 0.2;
+    p.dashCharges--; if (p.dashCharges === p.dashMax - 1) p.dashRe = 1.1; p.en -= 18; p.enDelay = 0.5; p.dashT = 0.2; p.inv = Math.max(p.inv, 0.34);
     if (ml < 0.1) { wx = -sn; wz = -cs; } p.ddx = wx / (Math.hypot(wx, wz) || 1); p.ddz = wz / (Math.hypot(wx, wz) || 1); sfx('dash'); p.fovKick = 1; hintDone('dash');
     emit(p.x, 0.8, p.z, 14, { color: [G.bladeGlowMat.color.r, G.bladeGlowMat.color.g, G.bladeGlowMat.color.b], speed: 3, life: 0.4, size: 0.22, grav: 0 });
   }
