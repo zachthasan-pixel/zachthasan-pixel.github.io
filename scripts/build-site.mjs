@@ -19,6 +19,18 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SITE = "https://drzahirhasan.com";
 const cat = JSON.parse(readFileSync(join(ROOT, "catalog/catalog.json"), "utf8"));
 const BOOKS = cat.books.filter((b) => b.authorSite?.show !== false);
+// The Arcade is described in arcade/games.json. If that file is missing or broken, or a game's
+// folder is gone, the rest of the site still builds and the Arcade simply shrinks or disappears.
+function loadArcade() {
+  try {
+    const a = JSON.parse(readFileSync(join(ROOT, "arcade/games.json"), "utf8"));
+    a.games = (a.games || []).filter((g) => g.slug && g.folder && g.title && existsSync(join(ROOT, g.folder, "index.html")));
+    return a.games.length ? a : null;
+  } catch {
+    return null;
+  }
+}
+const ARCADE = loadArcade();
 const PHOTO = "images/author/zahir-hasan.jpg";
 const STUDIO = "images/author/zahir-hasan-studio.jpg";
 
@@ -93,6 +105,7 @@ function shellTop({ active, depth = 0, title, description, url, image, jsonld, t
     ["index.html", "Home"],
     ...ORDER.map((k) => [SECTIONS[k].page, SECTIONS[k].nav.replace("&", "&amp;")]),
     ["apps.html", "Apps"],
+    ...(ARCADE ? [["arcade/", "Arcade"]] : []),
     ["about.html", "About"],
     ["search.html", "Search"],
   ];
@@ -544,10 +557,172 @@ ${shellBottom(0).replace("</body>", '<script src="js/main.js"></script>\n</body>
   }
 }
 
+// ─── The Arcade: a front door and one page per game ──────────────────────
+const arcadeUrl = (g) => `arcade/${g.slug}.html`;
+const arcadeBooks = (slugs) => (slugs || []).map((x) => BOOKS.find((b) => b.slug === x)).filter(Boolean);
+const jsonForScript = (o) => JSON.stringify(o).replace(/</g, "\\u003c");
+
+function arcadeData() {
+  return `<script type="application/json" id="arcade-data">${jsonForScript(
+    ARCADE.games.map((g) => ({ slug: g.slug, title: g.title, cover: `../${g.cover}`, tagline: g.tagline, best: g.best || null })),
+  )}</script>\n<script src="../js/arcade.js" defer></script>`;
+}
+
+function arcadeCard(g) {
+  return `<a class="arc-card" href="${g.slug}.html" data-game="${attr(g.slug)}">
+  <span class="arc-cover"><img src="../${g.cover}" alt="${attr(g.title)}" loading="lazy">${g.isNew ? '<span class="arc-new">New</span>' : ""}</span>
+  <span class="arc-kind">${esc(g.kind)}</span>
+  <h3>${esc(g.title)}</h3>
+  <p>${esc(g.tagline)}</p>
+  <span class="arc-foot"><span class="arc-play">Play &rarr;</span><span class="arc-best" data-best hidden></span></span>
+</a>`;
+}
+
+function arcadeBook(b, line) {
+  const text = line || b.authorSite?.blurb || b.subtitle || "";
+  return `<a class="arc-book" href="../${bookUrl(b)}">
+  <img src="../${thumb(b)}" alt="${attr(b.title)} cover" loading="lazy">
+  <span class="arc-book-text">
+    <span class="arc-book-title">${esc(b.title)}</span>${b.subtitle ? `\n    <span class="arc-book-sub">${esc(b.subtitle)}</span>` : ""}
+    <span class="arc-book-line">${esc(text)}</span>
+    <span class="arc-book-go">About the book &rarr;</span>
+  </span>
+</a>`;
+}
+
+function arcadeShelfOfBooks(g) {
+  const paired = arcadeBooks(g.books);
+  const house = arcadeBooks(ARCADE.houseBooks);
+  if (paired.length) {
+    return `<div class="sechead"><h2>Read next</h2><div class="rule"></div></div>
+      <p class="arc-readline">${esc(g.readLine || "If you enjoyed the game, these are the books closest to it.")}</p>
+      <div class="arc-books">\n${paired.map((b) => arcadeBook(b)).join("\n")}\n</div>`;
+  }
+  if (house.length) {
+    return `<div class="sechead"><h2>From the bookshelf</h2><div class="rule"></div></div>
+      <p class="arc-readline">The same person who makes these games writes novels. One of them begins inside a game.</p>
+      <div class="arc-books">\n${house.map((b) => arcadeBook(b, ARCADE.houseLine)).join("\n")}\n</div>`;
+  }
+  return "";
+}
+
+function arcadeHubPage() {
+  const games = ARCADE.games;
+  const feat = games.find((g) => g.slug === ARCADE.featured) || games[0];
+  const house = arcadeBooks(ARCADE.houseBooks);
+  const shelves = (ARCADE.shelves || [{ key: null, title: "Games" }])
+    .map((sh) => ({ sh, list: games.filter((g) => sh.key === null || g.shelf === sh.key) }))
+    .filter((x) => x.list.length);
+  const loose = games.filter((g) => !shelves.some((x) => x.list.includes(g)));
+  if (loose.length) shelves.push({ sh: { title: "More games" }, list: loose });
+  const count = games.length;
+  return `${shellTop({
+    active: "arcade/",
+    depth: 1,
+    title: "The Arcade — Dr. Zahir Hasan",
+    description: `${count} free browser games by Zahir Hasan. No ads and nothing to install: they play on a computer or a phone, with full-screen play and your best scores kept on your device.`,
+    url: "arcade/",
+    image: feat.cover,
+  })}
+    <div class="arc-hero">
+      <div class="wrap arc-hero-in">
+        <div class="arc-hero-text">
+          <div class="kicker" id="arc-hero-kicker">The Arcade</div>
+          <h1 id="arc-hero-title">${esc(feat.title)}</h1>
+          <p id="arc-hero-line">${esc(feat.tagline)}</p>
+          <a class="hp-btn primary" id="arc-hero-play" href="${feat.slug}.html">Play now</a>
+          <div class="arc-hero-note">${count} games &middot; free &middot; no ads &middot; nothing to install</div>
+        </div>
+        <a class="arc-hero-cover" id="arc-hero-cover" href="${feat.slug}.html"><img src="../${feat.cover}" alt="${attr(feat.title)}"></a>
+      </div>
+    </div>
+    <div class="wrap arc-body">
+${shelves
+  .map(
+    ({ sh, list }) => `      <div class="sechead"><h2>${esc(sh.title)}</h2><div class="rule"></div></div>
+      <div class="arc-grid">\n${list.map(arcadeCard).join("\n")}\n</div>`,
+  )
+  .join("\n")}
+${
+  house.length
+    ? `      <div class="arc-house">
+        <div class="arc-house-text">
+          <div class="kicker">From the bookshelf</div>
+          <h2>The games come with a library</h2>
+          <p>The same person who makes these games writes fantasy, science fiction and children's books. One of the novels begins inside a game.</p>
+          <a class="hp-btn primary" href="../fiction.html">Browse the fiction</a>
+        </div>
+        <div class="arc-books">\n${house.map((b) => arcadeBook(b, ARCADE.houseLine)).join("\n")}\n</div>
+      </div>`
+    : ""
+}
+    </div>
+${arcadeData()}
+${shellBottom(1)}`;
+}
+
+function arcadeGamePage(g) {
+  const others = ARCADE.games.filter((x) => x !== g).slice(0, 3);
+  const src = `../${g.folder}/`;
+  return `${shellTop({
+    active: "arcade/",
+    depth: 1,
+    title: `${g.title} — The Arcade`,
+    description: g.tagline,
+    url: arcadeUrl(g),
+    image: g.cover,
+    jsonld: {
+      "@context": "https://schema.org",
+      "@type": "VideoGame",
+      name: g.title,
+      description: g.about || g.tagline,
+      url: `${SITE}/${arcadeUrl(g)}`,
+      image: `${SITE}/${g.cover}`,
+      genre: g.kind,
+      gamePlatform: "Web browser",
+      author: { "@type": "Person", name: "Dr. Zahir Hasan", url: `${SITE}/` },
+      offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+    },
+  })}
+    <div class="wrap arc-play-wrap" data-game="${attr(g.slug)}">
+      <div class="arc-bar">
+        <a class="arc-back" href="./">&larr; Arcade</a>
+        <h1>${esc(g.title)}</h1>
+        <span class="arc-best" data-best hidden></span>
+        <button class="arc-fs" id="arc-fs" type="button" hidden>Full screen</button>
+      </div>
+      <div class="arc-stage" id="arc-stage" data-src="${attr(src)}" data-title="${attr(g.title)}">
+        <img class="arc-poster" src="../${g.cover}" alt="">
+        <div class="arc-start">
+          <span class="arc-kind">${esc(g.kind)}</span>
+          <button class="hp-btn primary" id="arc-start" type="button">Play</button>
+          <span class="arc-plays">${esc(g.plays || "Plays in the browser")}</span>
+        </div>
+      </div>
+      <div class="arc-under">
+        <p class="arc-about">${esc(g.about || g.tagline)}</p>
+        <p class="arc-links"><a href="${attr(src)}">Open the game on its own page</a>${g.elsewhere ? ` &middot; <a href="${attr(g.elsewhere.url)}" rel="noopener">${esc(g.elsewhere.label)}</a>` : ""}</p>
+      </div>
+      ${arcadeShelfOfBooks(g)}
+      <div class="sechead"><h2>More games</h2><div class="rule"></div><a href="./">All games</a></div>
+      <div class="arc-grid">\n${others.map(arcadeCard).join("\n")}\n</div>
+    </div>
+${arcadeData()}
+${shellBottom(1)}`;
+}
+
+function writeArcade() {
+  if (!ARCADE) return 0;
+  mkdirSync(join(ROOT, "arcade"), { recursive: true });
+  writeFileSync(join(ROOT, "arcade/index.html"), arcadeHubPage());
+  for (const g of ARCADE.games) writeFileSync(join(ROOT, arcadeUrl(g)), arcadeGamePage(g));
+  return ARCADE.games.length;
+}
+
 // ─── Sitemap ──────────────────────────────────────────────────────────────
 function sitemap() {
   const today = new Date().toISOString().slice(0, 10);
-  const urls = [["", "1.0"], ...ORDER.map((k) => [SECTIONS[k].page, "0.9"]), ["apps.html", "0.7"], ["about.html", "0.6"], ["contact.html", "0.5"], ["whispering-realms.html", "0.6"], ["elk-kingdom.html", "0.6"], ...BOOKS.map((b) => [bookUrl(b), "0.8"])];
+  const urls = [["", "1.0"], ...ORDER.map((k) => [SECTIONS[k].page, "0.9"]), ["apps.html", "0.7"], ["about.html", "0.6"], ["contact.html", "0.5"], ["whispering-realms.html", "0.6"], ["elk-kingdom.html", "0.6"], ...(ARCADE ? [["arcade/", "0.8"], ...ARCADE.games.map((g) => [arcadeUrl(g), "0.6"])] : []), ...BOOKS.map((b) => [bookUrl(b), "0.8"])];
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(([u, pr]) => `  <url><loc>${SITE}/${u}</loc><lastmod>${today}</lastmod><priority>${pr}</priority></url>`).join("\n")}\n</urlset>\n`;
 }
 
@@ -559,5 +734,6 @@ for (const b of BOOKS) writeFileSync(join(ROOT, bookUrl(b)), bookPage(b));
 writeFileSync(join(ROOT, "about.html"), aboutPage());
 writeFileSync(join(ROOT, "contact.html"), contactPage());
 writeFileSync(join(ROOT, "sitemap.xml"), sitemap());
+const arcadeCount = writeArcade();
 refreshLegacy();
-console.log(`built: home, ${ORDER.length} list pages, ${BOOKS.length} book pages, about, contact, sitemap, ${Object.keys(LEGACY).length} legacy pages reshelled`);
+console.log(`built: home, ${ORDER.length} list pages, ${BOOKS.length} book pages, about, contact, sitemap, ${Object.keys(LEGACY).length} legacy pages reshelled, arcade with ${arcadeCount} games`);
