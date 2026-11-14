@@ -24,7 +24,7 @@ for v in preview-landscape-1920x1080 preview-portrait-1080x1620; do cp "store-ar
 cp release/itch-offline/* "$W/4-Game-Files-and-Reports/Play-in-browser/"
 cp DESIGN-BRIEF_$D.md TEST-REPORT_$D.md "$W/4-Game-Files-and-Reports/"
 zip -q -r "$W/4-Game-Files-and-Reports/${P}_source-code.zip" src tools package.json package-lock.json DESIGN-BRIEF_$D.md -x 'tools/shot-*.png'
-for f in assets/store/*.png; do cp "$f" "$W/4-Game-Files-and-Reports/Higgsfield-original-art/${P}_$(basename $f)"; done
+for f in assets/store/*.png; do convert "$f" -quality 93 "$W/4-Game-Files-and-Reports/Higgsfield-original-art/${P}_$(basename ${f%.png}).jpg"; done
 for f in brute hilt stinger tyrant wraith; do convert "assets/concepts/$f.png" -quality 90 "$W/4-Game-Files-and-Reports/Higgsfield-original-art/${P}_concept-$f.jpg"; cp "assets/models/$f.glb" "$W/4-Game-Files-and-Reports/3D-models/${P}_$f.glb"; done
 cp kit-src/ITCH-SUBMISSION-GUIDE_$D.md "$W/1-itch.io/"; cp kit-src/POKI-SUBMISSION-GUIDE_$D.md "$W/2-Poki/"; cp kit-src/CRAZYGAMES-SUBMISSION-GUIDE_$D.md "$W/3-CrazyGames/"; cp kit-src/00-START-HERE_$D.md "$W/"
 rm -rf "$K"; mv "$K.tmp" "$K"
