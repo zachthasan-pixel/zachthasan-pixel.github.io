@@ -3,7 +3,7 @@
 //   node scripts/build-site.mjs
 //
 // Writes: index.html, fiction.html, childrens-books.html, political-science.html,
-// education.html, about.html, contact.html, books/<slug>.html, sitemap.xml.
+// education.html, about.html, contact.html, books/<slug>.html, series/<series>.html, sitemap.xml.
 // Hand-written pages (apps, the two series pages, the games) keep their content;
 // only their header and footer are refreshed.
 //
@@ -104,16 +104,25 @@ const P = (depth) => (depth ? "../" : "");
 const AUTHOR_SUFFIX = " — Dr. Zahir Hasan";
 const TITLE_MAX = 60;
 const DESC_MAX = 155;
-// Series that have a page of their own.
-const SERIES_PAGES = { "The Whispering Realms": "whispering-realms.html", "The Elk Kingdom Chronicles": "elk-kingdom.html" };
-// Production notes that have slipped into a catalogue description and must never reach a page.
-// Remove an entry here once the catalogue itself has been corrected.
-const STRAY_NOTE = /^Where a platform's box is plain text only/i; // a paste instruction (The Arab Dilemma)
-const STRAY_ASIDE = /\s*\(with more realistic body proportions and details, but kind smiling faces and expressive eyes\)/; // an illustration brief (The Great Dino Journey)
-const bookParas = (b) =>
-  (b.description?.length ? b.description : [b.authorSite?.blurb || ""])
-    .filter((t) => t && !STRAY_NOTE.test(t))
-    .map((t) => t.replace(STRAY_ASIDE, ""));
+// ─── Series ───────────────────────────────────────────────────────────────
+// A series gets a reading-order page (series/<name>.html) as soon as the catalogue holds
+// two of its books. Nothing else is needed: add Book 2 to the catalogue and the page appears.
+// Two series have a hand-written page instead, and those are left as they are.
+const HANDMADE_SERIES_PAGES = { "The Whispering Realms": "whispering-realms.html", "The Elk Kingdom Chronicles": "elk-kingdom.html" };
+// Series held back from getting a page. "Aidan": the two books share a hero's name, but one is a
+// bedtime story for ages 3-6 and the other a longer adventure, and Amazon does not list them
+// as a series. No reading-order page until the author confirms they belong together.
+const SERIES_WITHOUT_PAGE = new Set(["Aidan"]);
+const slugify = (t) => t.toLowerCase().replace(/&/g, " and ").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+const seriesBooks = (name) => BOOKS.filter((b) => b.series?.name === name).sort((a, b) => a.series.order - b.series.order);
+const seriesUrl = (name) => `series/${slugify(name)}.html`;
+const SERIES_BUILT = [...new Set(BOOKS.filter((b) => b.series).map((b) => b.series.name))].filter(
+  (name) => !HANDMADE_SERIES_PAGES[name] && !SERIES_WITHOUT_PAGE.has(name) && seriesBooks(name).length > 1,
+);
+// Every series that has a page of its own, hand-written or built.
+const SERIES_PAGES = { ...HANDMADE_SERIES_PAGES, ...Object.fromEntries(SERIES_BUILT.map((name) => [name, seriesUrl(name)])) };
+
+const bookParas = (b) => (b.description?.length ? b.description : [b.authorSite?.blurb || ""]).filter(Boolean);
 
 // A book's <title>: as much of "Title: Subtitle" as fits, cut at a natural break in the subtitle.
 function bookMetaTitle(b) {
@@ -131,14 +140,8 @@ function bookMetaTitle(b) {
   return (b.title + AUTHOR_SUFFIX).length <= TITLE_MAX ? b.title + AUTHOR_SUFFIX : b.title;
 }
 
-// A description that fits: whole sentences up to the limit, taken from the text as written.
-function metaDescription(parts) {
-  const text = (Array.isArray(parts) ? parts.join(" ") : String(parts || ""))
-    .replace(/\*+/g, "")
-    .replace(/\s+/g, " ")
-    .replace(/([a-z!?])\.([A-Z])/g, "$1. $2")
-    .trim();
-  if (text.length <= DESC_MAX) return text;
+// As many whole sentences from the start of a text as fit in `max` characters.
+function wholeSentences(text, max) {
   const pieces = text.split(/(?<=[.!?]["”’)]?)\s+(?=[A-Z0-9"“‘(])/);
   const sentences = [];
   for (const piece of pieces) {
@@ -149,9 +152,21 @@ function metaDescription(parts) {
   let out = "";
   for (const s of sentences) {
     const next = out ? `${out} ${s}` : s;
-    if (next.length > DESC_MAX) break;
+    if (next.length > max) break;
     out = next;
   }
+  return out;
+}
+
+// A description that fits: whole sentences up to the limit, taken from the text as written.
+function metaDescription(parts) {
+  const text = (Array.isArray(parts) ? parts.join(" ") : String(parts || ""))
+    .replace(/\*+/g, "")
+    .replace(/\s+/g, " ")
+    .replace(/([a-z!?])\.([A-Z])/g, "$1. $2")
+    .trim();
+  if (text.length <= DESC_MAX) return text;
+  const out = wholeSentences(text, DESC_MAX);
   if (out.length >= 70) return out;
   const cut = text.slice(0, DESC_MAX - 1);
   return `${cut.slice(0, cut.lastIndexOf(" ")).replace(/[\s,;:—–-]+$/, "")}…`;
@@ -460,7 +475,7 @@ function bookPage(b) {
     url: `${SITE}/${bookUrl(b)}`,
     inLanguage: "en",
     ...(paras.length ? { description: summary } : {}),
-    ...(b.series ? { isPartOf: { "@type": "BookSeries", name: b.series.name }, position: b.series.order } : {}),
+    ...(b.series ? { isPartOf: { "@type": "BookSeries", name: b.series.name, ...(seriesPage ? { url: `${SITE}/${seriesPage}` } : {}) }, position: b.series.order } : {}),
     workExample: b.asins.map((a, i) => ({
       "@type": "Book",
       bookFormat: i === 0 ? "https://schema.org/EBook" : "https://schema.org/Paperback",
@@ -510,6 +525,98 @@ function bookPage(b) {
       </div>
     </div>
 ${shellBottom(1)}`;
+}
+
+// ─── Series pages: the books of a series in reading order ─────────────────
+const NUMBER_WORDS = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten"];
+// The opening of a book's own description: whole paragraphs until there is enough to read,
+// and a very long single paragraph cut back to whole sentences.
+function teaser(b) {
+  const out = [];
+  let length = 0;
+  for (const para of bookParas(b)) {
+    if (length >= 260 || out.length === 5) break;
+    const text = para.length > 520 ? wholeSentences(para, 420) || para : para;
+    out.push(text);
+    length += text.length;
+    if (text !== para) break;
+  }
+  return out;
+}
+
+function seriesPage(name) {
+  const books = seriesBooks(name);
+  const key = sec(books[0]);
+  const s = SECTIONS[key];
+  const url = seriesUrl(name);
+  // When every book carries the series name as its title (The Lattice), the subtitle is the book's name.
+  const sameTitle = books.every((b) => b.title === books[0].title);
+  const shortName = (b) => (sameTitle && b.subtitle ? b.subtitle : b.title);
+  const fullName = (b) => (sameTitle && b.subtitle ? `${b.title}: ${b.subtitle}` : b.title);
+  const subLine = (b) => (sameTitle || !b.subtitle || /^book\s+\w+$/i.test(b.subtitle) ? "" : b.subtitle);
+  const count = `${NUMBER_WORDS[books.length] || books.length} books`;
+  const kind = key === "kids" ? "children's series" : "fiction series";
+  const first = books[0];
+  const title = `${name}: Books in Order`;
+  const jsonld = {
+    "@context": "https://schema.org",
+    "@type": "BookSeries",
+    name,
+    url: `${SITE}/${url}`,
+    author: { "@type": "Person", "@id": `${SITE}/#author`, name: "Dr. Zahir Hasan", url: `${SITE}/` },
+    publisher: { "@type": "Organization", name: "Maple & Pine Press", url: "https://mapleandpinepress.com" },
+    inLanguage: "en",
+    hasPart: books.map((b) => ({ "@type": "Book", name: fullName(b), position: b.series.order, url: `${SITE}/${bookUrl(b)}`, image: `${SITE}/${full(b)}` })),
+  };
+  const row = (b) => {
+    const buy =
+      b.status === "forthcoming" || !b.asins.length
+        ? ""
+        : `\n              <a class="buylink alt" href="${amazon(b.asins[0])}" rel="noopener">Buy on Amazon</a>`;
+    return `<li>
+            <a class="ro-cover" href="../${bookUrl(b)}"><img src="../${thumb(b)}" alt="${attr(fullName(b))} cover" loading="lazy" width="480"></a>
+            <div>
+              <div class="ro-num">Book ${b.series.order}${b.status === "forthcoming" ? " &middot; Forthcoming" : ""}</div>
+              <h3><a href="../${bookUrl(b)}">${esc(fullName(b))}</a></h3>
+              ${subLine(b) ? `<p class="ro-sub">${esc(subLine(b))}</p>` : ""}
+              <div class="bookdesc">
+                ${teaser(b).map((t) => `<p>${esc(t).replace(/\*([^*\n]+)\*/g, "<em>$1</em>")}</p>`).join("\n                ")}
+              </div>
+              <div class="buyrow">
+              <a class="buylink" href="../${bookUrl(b)}">About this book</a>${buy}
+              </div>
+            </div>
+          </li>`;
+  };
+  return `${shellTop({
+    active: s.page,
+    depth: 1,
+    title: (title + AUTHOR_SUFFIX).length <= TITLE_MAX ? title + AUTHOR_SUFFIX : title,
+    ogTitle: `${name} — Dr. Zahir Hasan`,
+    description: `${name} by Dr. Zahir Hasan, in reading order. ${books.map((b) => `Book ${b.series.order}: ${shortName(b).replace(/[.!?]+$/, "")}.`).join(" ")}`,
+    url,
+    image: full(first),
+    jsonld,
+  })}
+    <div class="pagehead">
+      <div class="wrap">
+        <div class="crumbs" style="padding:0 0 14px"><a href="../index.html">Home</a> &rsaquo; <a href="../${s.page}">${esc(s.title)}</a></div>
+        <div class="kicker">Series &middot; ${count.toLowerCase()}</div>
+        <h1>${esc(name)}</h1>
+        <p>${esc(name)} is a ${kind} by Dr. Zahir Hasan, published by Maple &amp; Pine Press. ${count}, listed here in reading order. Begin with Book ${first.series.order}, <a href="../${bookUrl(first)}" style="color:var(--accent)">${esc(fullName(first))}</a>.</p>
+      </div>
+    </div>
+    <section class="band" style="padding-top:48px">
+      <div class="wrap">
+        <div class="sechead" style="margin-bottom:34px"><h2 style="font-size:24px">Reading order</h2><div class="rule"></div></div>
+        <ol class="readorder">
+          ${books.map(row).join("\n          ")}
+        </ol>
+        <p class="series-back"><a href="../${s.page}">&larr; All ${esc(s.title)}</a></p>
+      </div>
+    </section>
+    ${newsletterBand()}
+${shellBottom(1, true)}`;
 }
 
 // ─── About & Contact ──────────────────────────────────────────────────────
@@ -821,7 +928,7 @@ ${shellBottom(0)}`;
 // ─── Sitemap ──────────────────────────────────────────────────────────────
 function sitemap() {
   const today = new Date().toISOString().slice(0, 10);
-  const urls = [["", "1.0"], ...ORDER.map((k) => [SECTIONS[k].page, "0.9"]), ["apps.html", "0.7"], ["about.html", "0.6"], ["contact.html", "0.5"], ["whispering-realms.html", "0.6"], ["elk-kingdom.html", "0.6"], ...(ARCADE ? [["arcade/", "0.8"], ...ARCADE.games.map((g) => [arcadeUrl(g), "0.6"])] : []), ...BOOKS.map((b) => [bookUrl(b), "0.8"])];
+  const urls = [["", "1.0"], ...ORDER.map((k) => [SECTIONS[k].page, "0.9"]), ["apps.html", "0.7"], ["about.html", "0.6"], ["contact.html", "0.5"], ["whispering-realms.html", "0.6"], ["elk-kingdom.html", "0.6"], ...SERIES_BUILT.map((name) => [seriesUrl(name), "0.7"]), ...(ARCADE ? [["arcade/", "0.8"], ...ARCADE.games.map((g) => [arcadeUrl(g), "0.6"])] : []), ...BOOKS.map((b) => [bookUrl(b), "0.8"])];
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(([u, pr]) => `  <url><loc>${SITE}/${u}</loc><lastmod>${today}</lastmod><priority>${pr}</priority></url>`).join("\n")}\n</urlset>\n`;
 }
 
@@ -830,10 +937,12 @@ mkdirSync(join(ROOT, "books"), { recursive: true });
 writeFileSync(join(ROOT, "index.html"), homePage());
 for (const k of ORDER) writeFileSync(join(ROOT, SECTIONS[k].page), sectionPage(k));
 for (const b of BOOKS) writeFileSync(join(ROOT, bookUrl(b)), bookPage(b));
+mkdirSync(join(ROOT, "series"), { recursive: true });
+for (const name of SERIES_BUILT) writeFileSync(join(ROOT, seriesUrl(name)), seriesPage(name));
 writeFileSync(join(ROOT, "about.html"), aboutPage());
 writeFileSync(join(ROOT, "contact.html"), contactPage());
 writeFileSync(join(ROOT, "404.html"), notFoundPage());
 writeFileSync(join(ROOT, "sitemap.xml"), sitemap());
 const arcadeCount = writeArcade();
 refreshLegacy();
-console.log(`built: home, ${ORDER.length} list pages, ${BOOKS.length} book pages, about, contact, sitemap, ${Object.keys(LEGACY).length} legacy pages reshelled, arcade with ${arcadeCount} games`);
+console.log(`built: home, ${ORDER.length} list pages, ${BOOKS.length} book pages, ${SERIES_BUILT.length} series pages, about, contact, sitemap, ${Object.keys(LEGACY).length} legacy pages reshelled, arcade with ${arcadeCount} games`);

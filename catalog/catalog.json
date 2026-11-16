@@ -1211,7 +1211,10 @@
    ],
    "cover": "covers/the-exiles-blood.jpg",
    "coverFit": null,
-   "series": null,
+   "series": {
+    "name": "The Shadowfire Throne",
+    "order": 1
+   },
    "isbn": {
     "paperback": null,
     "hardcover": null
