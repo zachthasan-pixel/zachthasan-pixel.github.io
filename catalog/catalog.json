@@ -1688,10 +1688,7 @@
    ],
    "cover": "covers/aidan-and-the-butterfly-kingdom.jpg",
    "coverFit": null,
-   "series": {
-    "name": "Aidan",
-    "order": 2
-   },
+   "series": null,
    "isbn": {
     "paperback": null,
     "hardcover": null
@@ -1729,10 +1726,7 @@
    ],
    "cover": "covers/aidan-and-the-ember-hollow.jpg",
    "coverFit": null,
-   "series": {
-    "name": "Aidan",
-    "order": 1
-   },
+   "series": null,
    "isbn": {
     "paperback": null,
     "hardcover": null

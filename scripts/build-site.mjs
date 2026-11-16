@@ -109,10 +109,8 @@ const DESC_MAX = 155;
 // two of its books. Nothing else is needed: add Book 2 to the catalogue and the page appears.
 // Two series have a hand-written page instead, and those are left as they are.
 const HANDMADE_SERIES_PAGES = { "The Whispering Realms": "whispering-realms.html", "The Elk Kingdom Chronicles": "elk-kingdom.html" };
-// Series held back from getting a page. "Aidan": the two books share a hero's name, but one is a
-// bedtime story for ages 3-6 and the other a longer adventure, and Amazon does not list them
-// as a series. No reading-order page until the author confirms they belong together.
-const SERIES_WITHOUT_PAGE = new Set(["Aidan"]);
+// Series to hold back from getting a page, by name. None at present.
+const SERIES_WITHOUT_PAGE = new Set([]);
 const slugify = (t) => t.toLowerCase().replace(/&/g, " and ").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 const seriesBooks = (name) => BOOKS.filter((b) => b.series?.name === name).sort((a, b) => a.series.order - b.series.order);
 const seriesUrl = (name) => `series/${slugify(name)}.html`;
