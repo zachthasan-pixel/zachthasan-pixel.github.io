@@ -16,6 +16,7 @@
       "about": "Alien pods are crashing down around Earth's last shield generator. Smash each pod before it hatches, blast the crawlers, jellies and charging beasts that get out, build turrets and call in an Orbital Strike. Unlock weapons, zones and a whole Xenodex of aliens.",
       "plays": "Computer or phone",
       "best": { "key": "podbreakers_v1_save", "path": "totalPods", "label": "Pods smashed" },
+      "elsewhere": { "label": "Also on itch.io", "url": "https://zachstera3.itch.io/pod-breakers" },
       "books": ["the-memory-at-the-end-of-time", "the-code-of-the-cosmic-compass"],
       "readLine": "More trouble from the sky, on the page."
     },
@@ -39,6 +40,7 @@
       "about": "Dash, charge and bonk your rivals off a crumbling floating arena. The more hits they take, the further they fly. Climb from Bronze to Legend against CPU rivals, or settle it with a friend on the same keyboard or tablet.",
       "plays": "Computer, tablet or phone",
       "best": { "key": "brinkball-v1", "path": "wins", "label": "Wins" },
+      "elsewhere": { "label": "Also on itch.io", "url": "https://zachstera3.itch.io/brinkball" },
       "books": []
     },
     {
