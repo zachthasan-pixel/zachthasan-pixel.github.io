@@ -1373,7 +1373,10 @@
    ],
    "cover": "covers/the-last-lobby.jpg",
    "coverFit": null,
-   "series": null,
+   "series": {
+    "name": "The Kingdoms of Wake Mysteries",
+    "order": 1
+   },
    "isbn": {
     "paperback": null,
     "hardcover": null
