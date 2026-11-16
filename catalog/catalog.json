@@ -6,7 +6,7 @@
   "fiction": "Fantasy & Speculative Fiction",
   "kids": "Children's Books"
  },
- "_updated": "2026-10-23",
+ "_updated": "2026-11-16",
  "books": [
   {
    "slug": "a-land-unknown",
@@ -20,23 +20,10 @@
     "B0HFLLGZJK"
    ],
    "description": [
-    "A man wins his case. An immigration judge finds that the government of his",
-    "country would torture him, and forbids his removal there. Four years later he",
-    "is put on an aircraft to a country he has never seen, handed to a warden who",
-    "has no charge against him, and held in a prison built by somebody else's",
-    "emergency.",
+    "A man wins his case. An immigration judge finds that the government of his country would torture him, and forbids his removal there. Four years later he is put on an aircraft to a country he has never seen, handed to a warden who has no charge against him, and held in a prison built by somebody else's emergency.",
     "Nobody broke the law. That is the problem.",
-    "A Land Unknown is the first full legal account of what the United States has",
-    "built since 2025 - a triangular system of third-country removals, purchased",
-    "detention, and confidential agreements in which the decision to expel is",
-    "deliberately separated from responsibility for what follows. Drawing on the",
-    "governing statutes, the 2025-2026 litigation, and the failed experiments of",
-    "Britain, Australia, Canada and Italy, Dr. Zahir Hasan shows that the failures",
-    "here are not administrative. They are the design.",
-    "Rigorous enough for a courtroom and written for anyone who has ever wondered",
-    "what a border is actually for, this book ends where the evidence leads: not",
-    "with a better procedure, but with a statute that would prohibit the practice",
-    "outright.",
+    "A Land Unknown is the first full legal account of what the United States has built since 2025 - a triangular system of third-country removals, purchased detention, and confidential agreements in which the decision to expel is deliberately separated from responsibility for what follows. Drawing on the governing statutes, the 2025-2026 litigation, and the failed experiments of Britain, Australia, Canada and Italy, Dr. Zahir Hasan shows that the failures here are not administrative. They are the design.",
+    "Rigorous enough for a courtroom and written for anyone who has ever wondered what a border is actually for, this book ends where the evidence leads: not with a better procedure, but with a statute that would prohibit the practice outright.",
     "For readers of immigration law, human rights, and American politics."
    ],
    "cover": "covers/a-land-unknown.jpg",
@@ -418,7 +405,6 @@
     "B0HDYDWSDX"
    ],
    "description": [
-    "Where a platform's box is plain text only, just paste the same wording without the tags below — the line breaks will still read correctly.",
     "Why did the world watch Gaza's destruction unfold — and look away?",
     "On October 7, 2023, Hamas's attack on Israel set in motion a war whose scale of devastation in Gaza has been called, by many observers, an overkill. The Arab Dilemma asks the harder question that followed: why did Arab governments — bound to Palestinians by language, faith, and decades of solidarity rhetoric — largely stand aside? And why did the wider international community, despite mounting evidence of atrocity, fail to stop it?",
     "Drawing on international law, diplomatic history, and the shifting politics of the Middle East, Dr. Zahir Hasan traces the political calculations, historical grievances, and strategic interests behind this collective abandonment. Chapter by chapter, the book examines the actions — and inactions — of Egypt, Jordan, Saudi Arabia, Qatar, Iran, and the Gulf states, then widens the lens to the United Nations, the United States, and Europe.",
@@ -498,33 +484,11 @@
    ],
    "description": [
     "A caricature does not survive contact with a person.",
-    "For more than two decades, North American news, film, and policy have taught",
-    "millions of people to recognize Muslims as a threat before recognizing them as",
-    "neighbors. The Permanent Suspect traces how that habit of mind was built —",
-    "and how it endures.",
-    "The story begins before September 11, 2001, in the older Orientalist imagery",
-    "that primed audiences to see the Muslim world as backward and threatening. It",
-    "follows the post-9/11 security state as it hardened that imagery into policy:",
-    "watchlists, secondary screening, surveillance programs, and travel bans that",
-    "fell disproportionately on Muslim citizens and immigrants. It tracks how",
-    "Hollywood convention, and later streaming-era algorithms, kept the caricature",
-    "in circulation long after the headlines moved on. And it follows the same",
-    "pattern north of the border, through Quebec's Bill 21, the Quebec City mosque",
-    "shooting, and Canada's own security and immigration apparatus.",
-    "Grounded in court filings, government reports, peer-reviewed research, and",
-    "named, dated events rather than appeals to feeling alone,The Permanent",
-    "Suspect insists throughout on a rigorous, checkable standard of evidence.",
-    "It does not ask readers to take fear or grievance on faith — it shows its",
-    "sources, and lets the record speak.",
-    "The book argues for a simple, exacting standard: that belonging in a",
-    "democratic society is not a feeling extended by the goodwill of a majority,",
-    "but a public practice, sustained or withheld by specific, nameable",
-    "institutional choices — in newsrooms, in writers' rooms, in legislatures,",
-    "and in security agencies.",
-    "Written for readers of history, media criticism, and civil rights — and for",
-    "anyone who has ever been asked to prove, once again, that they belong —",
-    "The Permanent Suspect is a documented account of how a community was made",
-    "permanently suspect, and what it would take to undo it."
+    "For more than two decades, North American news, film, and policy have taught millions of people to recognize Muslims as a threat before recognizing them as neighbors. The Permanent Suspect traces how that habit of mind was built — and how it endures.",
+    "The story begins before September 11, 2001, in the older Orientalist imagery that primed audiences to see the Muslim world as backward and threatening. It follows the post-9/11 security state as it hardened that imagery into policy: watchlists, secondary screening, surveillance programs, and travel bans that fell disproportionately on Muslim citizens and immigrants. It tracks how Hollywood convention, and later streaming-era algorithms, kept the caricature in circulation long after the headlines moved on. And it follows the same pattern north of the border, through Quebec's Bill 21, the Quebec City mosque shooting, and Canada's own security and immigration apparatus.",
+    "Grounded in court filings, government reports, peer-reviewed research, and named, dated events rather than appeals to feeling alone, The Permanent Suspect insists throughout on a rigorous, checkable standard of evidence. It does not ask readers to take fear or grievance on faith — it shows its sources, and lets the record speak.",
+    "The book argues for a simple, exacting standard: that belonging in a democratic society is not a feeling extended by the goodwill of a majority, but a public practice, sustained or withheld by specific, nameable institutional choices — in newsrooms, in writers' rooms, in legislatures, and in security agencies.",
+    "Written for readers of history, media criticism, and civil rights — and for anyone who has ever been asked to prove, once again, that they belong — The Permanent Suspect is a documented account of how a community was made permanently suspect, and what it would take to undo it."
    ],
    "cover": "covers/the-permanent-suspect.jpg",
    "coverFit": null,
@@ -609,8 +573,7 @@
     "• Why the coming wave of synthetic media may outrun every law now on the books",
     "This is not a partisan tract or a doom-loop. It is a clear-eyed map of how free societies are trying to keep truth sovereign—not by decree, but by design—and a sober guide to the choices ahead.",
     "Essential reading for anyone who cares about democracy, law, technology, and the future of an open society.",
-    "Zahir Hasan (MPPA, LLM, EdD) writes on law, public policy, and democratic institutions from Tokyo.",
-    "---"
+    "Zahir Hasan (MPPA, LLM, EdD) writes on law, public policy, and democratic institutions from Tokyo."
    ],
    "cover": "covers/the-sovereignty-of-truth.jpg",
    "coverFit": null,
@@ -855,7 +818,8 @@
     "B0HH91LDBG"
    ],
    "description": [
-    "Project-based learning can produce deep, memorable learning—or weeks of busy activity. The difference is design.Project-Based Learning in Action is a practical field guide for K-12 teachers, instructional coaches, and school leaders who want projects that protect rigor while expanding student agency. Using the BUILD cycle, Zahir Hasan shows how to begin with worthy learning, frame authentic problems, guide inquiry, teach collaboration, use critique and revision, assess individual understanding, and recover when projects drift.",
+    "Project-based learning can produce deep, memorable learning—or weeks of busy activity. The difference is design.",
+    "Project-Based Learning in Action is a practical field guide for K-12 teachers, instructional coaches, and school leaders who want projects that protect rigor while expanding student agency. Using the BUILD cycle, Zahir Hasan shows how to begin with worthy learning, frame authentic problems, guide inquiry, teach collaboration, use critique and revision, assess individual understanding, and recover when projects drift.",
     "Inside this book you will find:",
     "Twenty-three chapters on designing, teaching, assessing, and sustaining high-quality PBL",
     "Six complete project models across grade bands and subjects",
@@ -935,9 +899,11 @@
     "B0HHCZJ2CW"
    ],
    "description": [
-    "Most books about AI in education tell you what to think. This one tells you what to do on Monday.Three years after generative AI arrived in classrooms, roughly nine in ten students use it for assessed work and roughly two in ten teachers work somewhere that has told them the rules. The AI Classroom closes that gap.",
+    "Most books about AI in education tell you what to think. This one tells you what to do on Monday.",
+    "Three years after generative AI arrived in classrooms, roughly nine in ten students use it for assessed work and roughly two in ten teachers work somewhere that has told them the rules. The AI Classroom closes that gap.",
     "Written by a university teacher with degrees in law, public policy and education, it reports what the research actually shows, separates legal obligation from good intention across six jurisdictions, and then hands over the documents. Nothing here is a blank template with brackets in it.",
-    "What is insideThe two-lane method — secure the few assessments that matter across a programme, and design the rest openly",
+    "What is inside",
+    "The two-lane method — secure the few assessments that matter across a programme, and design the rest openly",
     "Detection, honestly — what the tools do, what they cannot do, why they misfire on second-language writers, and the arithmetic that settles the decision for your institution",
     "A fair-process framework for academic integrity that survives an ombudsman's review, with the burden of proof where it belongs",
     "Two complete model policies, one for schools and one for universities, annotated with the reasoning behind every clause",
@@ -1023,20 +989,10 @@
    ],
    "description": [
     "The empress is dead. The will named two heirs. The knives choose neither.",
-    "Restored to a name twenty years erased, Lucan Corvinus is now the most wanted",
-    "man in the empire — accused of murdering the woman he tried to save. With",
-    "Sigrun Halvard beside him he rides for the top of the world to find the one",
-    "living witness who can prove who destroyed his father, while the Order's quiet",
-    "men ride the same road ahead of them.",
-    "Behind him, a ghost ship sails into harbour with her crew standing dead at",
-    "their stations. In the capital, an old man with a black bee on his cuff teaches",
-    "a new emperor how to lose an empire. And beyond the edge of the maps, the cold",
-    "that stopped that crew comes south, eight miles a day, patient as arithmetic.",
-    "The court has knives. The north has winter. And something out in the white has",
-    "learned to wear a dead man's face.",
-    "Book Two of the Draconate Saga — epic fantasy of dragons, morally gray houses,",
-    "and a slow-burning love story between two people who both expect to die young.",
-    "Best read after A Throne of Cinders."
+    "Restored to a name twenty years erased, Lucan Corvinus is now the most wanted man in the empire — accused of murdering the woman he tried to save. With Sigrun Halvard beside him he rides for the top of the world to find the one living witness who can prove who destroyed his father, while the Order's quiet men ride the same road ahead of them.",
+    "Behind him, a ghost ship sails into harbour with her crew standing dead at their stations. In the capital, an old man with a black bee on his cuff teaches a new emperor how to lose an empire. And beyond the edge of the maps, the cold that stopped that crew comes south, eight miles a day, patient as arithmetic.",
+    "The court has knives. The north has winter. And something out in the white has learned to wear a dead man's face.",
+    "Book Two of the Draconate Saga — epic fantasy of dragons, morally gray houses, and a slow-burning love story between two people who both expect to die young. Best read after A Throne of Cinders."
    ],
    "cover": "covers/a-court-of-knives.jpg",
    "coverFit": null,
@@ -1075,18 +1031,10 @@
    ],
    "description": [
     "Nine dragons are left in the world, and every one of them is a throne.",
-    "Lucan has spent his life on a mountain, stitching up what dragonlords do to each",
-    "other. He knows what the gift costs. He has buried its price. Then a dying rider is",
-    "carried up to the sanctum whispering a name Lucan has never heard: his own.",
-    "Dragged to the golden capital of an empire circling a dying empress's crown, the",
-    "son of an executed traitor becomes the piece every player wants — the Order, the",
-    "princes, the spymaster, the throne itself. There is one door out of the trap. It is",
-    "guarded by the only dragon no one has ever ridden and lived.",
-    "And far to the north, past the edge of the maps, something older than the empire",
-    "has begun to feed.",
-    "A Throne of Cinders opens the Draconate Saga: an epic fantasy of dragons, morally",
-    "gray houses, and a world that ended once before — for readers who like their",
-    "politics sharp, their dragons dangerous, and their heroes earned. Book One of ten."
+    "Lucan has spent his life on a mountain, stitching up what dragonlords do to each other. He knows what the gift costs. He has buried its price. Then a dying rider is carried up to the sanctum whispering a name Lucan has never heard: his own.",
+    "Dragged to the golden capital of an empire circling a dying empress's crown, the son of an executed traitor becomes the piece every player wants — the Order, the princes, the spymaster, the throne itself. There is one door out of the trap. It is guarded by the only dragon no one has ever ridden and lived.",
+    "And far to the north, past the edge of the maps, something older than the empire has begun to feed.",
+    "A Throne of Cinders opens the Draconate Saga: an epic fantasy of dragons, morally gray houses, and a world that ended once before — for readers who like their politics sharp, their dragons dangerous, and their heroes earned. Book One of ten."
    ],
    "cover": "covers/a-throne-of-cinders.jpg",
    "coverFit": null,
@@ -1845,7 +1793,8 @@
    "description": [
     "Join Cappy, a kind-hearted capybara, and Pip, his cheerful little bird friend, on a cozy adventure full of sunshine, muddy puddles, flower tunnels, and friendship.",
     "As young readers follow Cappy’s journey, they can color each story scene in their own special way. Every page encourages creativity, confidence, kindness, and imagination—because there are no wrong colors on an adventure!",
-    "Inside this gentle coloring book:11 original story-led coloring pages",
+    "Inside this gentle coloring book:",
+    "11 original story-led coloring pages",
     "Large, friendly illustrations for little hands",
     "A warm animal friendship story",
     "Cut-along-dotted-line guides for parents who want to remove and display finished pages",
@@ -2136,7 +2085,8 @@
     "B0HGL4ZMWS"
    ],
    "description": [
-    "Everything your child needs is right there on the page.Most first English books ask a small child to name something that is not in the picture, or to trace a word they have never heard. This one was built the other way around. Your child sees it, hears it, says it, traces it - and only then uses it.",
+    "Everything your child needs is right there on the page.",
+    "Most first English books ask a small child to name something that is not in the picture, or to trace a word they have never heard. This one was built the other way around. Your child sees it, hears it, says it, traces it - and only then uses it.",
     "Four steps, the same every time",
     "LOOK - a big, warm illustration opens every unit. Find it and point to it.",
     "SAY - say the word, then let your child say it back.",
@@ -2167,7 +2117,7 @@
    "authorSite": {
     "show": true,
     "section": "kids",
-    "blurb": "Everything your child needs is right there on the page.Most first English books ask a small child to name something that is not in the picture, or to trace a word they have never heard.",
+    "blurb": "Everything your child needs is right there on the page. Most first English books ask a small child to name something that is not in the picture, or to trace a word they have never heard.",
     "featured": false,
     "amazonJp": false
    }
@@ -2183,7 +2133,8 @@
     "B0HH8BDVR2"
    ],
    "description": [
-    "Everything they need before day one.Starting school is a big step. This workbook makes the run-up to it feel like play.",
+    "Everything they need before day one.",
+    "Starting school is a big step. This workbook makes the run-up to it feel like play.",
     "Ziggy the Zebra, Bella Bunny, Max Monkey, Luna Lion and Pip the Penguin guide your child through seventy-two pages of big, bright activities — built in the order a four-year-old actually learns, not jumbled together at random.",
     "What's inside",
     "Colors — eight colors to name, trace and hunt for around the house",
@@ -2218,7 +2169,7 @@
    "authorSite": {
     "show": true,
     "section": "kids",
-    "blurb": "Everything they need before day one.Starting school is a big step.",
+    "blurb": "Everything they need before day one. Starting school is a big step.",
     "featured": false,
     "amazonJp": false
    }
@@ -2236,7 +2187,8 @@
    "description": [
     "Join brave little T-Rex Rexy and his best friends Tri and Pip on an exciting quest to find the missing glowing egg!",
     "This story-driven coloring book follows their adventure through the jungle, across a river, up a mountain, and into a mysterious cave. Each page advances the story so kids color while reading along.",
-    "Features:12 bold and easy coloring pages perfect for ages 4–8",
+    "Features:",
+    "12 bold and easy coloring pages perfect for ages 4–8",
     "Large fill areas and thick outlines",
     "Perforation marks so finished pages can be cut out and displayed",
     "Single-sided pages recommended (blank backs included)",
@@ -2355,7 +2307,7 @@
     "B0HCWF5QGR"
    ],
    "description": [
-    "A group of friendly dinosaurs (with more realistic body proportions and details, but kind smiling faces and expressive eyes) help each other travel from cold snowy lands to warm tropical shores. Every page has short motivational dialogue about teamwork, perseverance, kindness, and courage.",
+    "A group of friendly dinosaurs help each other travel from cold snowy lands to warm tropical shores. Every page has short motivational dialogue about teamwork, perseverance, kindness, and courage.",
     "Special feature: Every coloring page has a dashed border so kids can color and cut out the pictures."
    ],
    "cover": "covers/the-great-dino-journey.jpg",
@@ -2374,7 +2326,7 @@
    "authorSite": {
     "show": true,
     "section": "kids",
-    "blurb": "A group of friendly dinosaurs (with more realistic body proportions and details, but kind smiling faces and expressive eyes) help each other travel from cold snowy lands to warm tropical shores.",
+    "blurb": "A group of friendly dinosaurs help each other travel from cold snowy lands to warm tropical shores.",
     "featured": false,
     "amazonJp": false
    }
