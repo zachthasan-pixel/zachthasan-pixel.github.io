@@ -48,7 +48,7 @@
   if (heroTitle) {
     var last = bySlug[store("arcade_last")];
     if (last) {
-      document.getElementById("arc-hero-kicker").textContent = "Jump back in";
+      document.getElementById("arc-hero-kicker").textContent = "The Arcade \u00b7 Jump back in";
       heroTitle.textContent = last.title;
       document.getElementById("arc-hero-line").textContent = last.tagline;
       document.getElementById("arc-hero-play").href = last.slug + ".html";

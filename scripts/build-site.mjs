@@ -99,8 +99,68 @@ const bySection = (key) => BOOKS.filter((b) => sec(b) === key);
 const seriesLabel = (b) => (b.series ? `${b.series.name} · Book ${b.series.order}` : null);
 const P = (depth) => (depth ? "../" : "");
 
-function shellTop({ active, depth = 0, title, description, url, image, jsonld, type = "website" }) {
+// ─── What search results show: titles and descriptions that fit ───────────
+// Search results cut a title at about 60 characters and a description at about 155.
+const AUTHOR_SUFFIX = " — Dr. Zahir Hasan";
+const TITLE_MAX = 60;
+const DESC_MAX = 155;
+// Series that have a page of their own.
+const SERIES_PAGES = { "The Whispering Realms": "whispering-realms.html", "The Elk Kingdom Chronicles": "elk-kingdom.html" };
+// Production notes that have slipped into a catalogue description and must never reach a page.
+// Remove an entry here once the catalogue itself has been corrected.
+const STRAY_NOTE = /^Where a platform's box is plain text only/i; // a paste instruction (The Arab Dilemma)
+const STRAY_ASIDE = /\s*\(with more realistic body proportions and details, but kind smiling faces and expressive eyes\)/; // an illustration brief (The Great Dino Journey)
+const bookParas = (b) =>
+  (b.description?.length ? b.description : [b.authorSite?.blurb || ""])
+    .filter((t) => t && !STRAY_NOTE.test(t))
+    .map((t) => t.replace(STRAY_ASIDE, ""));
+
+// A book's <title>: as much of "Title: Subtitle" as fits, cut at a natural break in the subtitle.
+function bookMetaTitle(b) {
+  const full = b.subtitle ? `${b.title}: ${b.subtitle}` : b.title;
+  if ((full + AUTHOR_SUFFIX).length <= TITLE_MAX) return full + AUTHOR_SUFFIX;
+  if (full.length <= TITLE_MAX) return full;
+  if (b.subtitle) {
+    // A cut at a dash or colon leaves a whole phrase. A cut inside a list or before "and" is marked with an ellipsis.
+    const cuts = [...b.subtitle.matchAll(/\s[—–-]\s|:\s|,\s|\sand\s/g)].map((m) => ({ at: m.index, whole: /[—–:-]/.test(m[0]) })).reverse();
+    for (const { at, whole } of cuts) {
+      const t = `${b.title}: ${b.subtitle.slice(0, at)}${whole ? "" : "…"}`;
+      if (t.length <= TITLE_MAX) return t;
+    }
+  }
+  return (b.title + AUTHOR_SUFFIX).length <= TITLE_MAX ? b.title + AUTHOR_SUFFIX : b.title;
+}
+
+// A description that fits: whole sentences up to the limit, taken from the text as written.
+function metaDescription(parts) {
+  const text = (Array.isArray(parts) ? parts.join(" ") : String(parts || ""))
+    .replace(/\*+/g, "")
+    .replace(/\s+/g, " ")
+    .replace(/([a-z!?])\.([A-Z])/g, "$1. $2")
+    .trim();
+  if (text.length <= DESC_MAX) return text;
+  const pieces = text.split(/(?<=[.!?]["”’)]?)\s+(?=[A-Z0-9"“‘(])/);
+  const sentences = [];
+  for (const piece of pieces) {
+    // "Dr." and friends do not end a sentence
+    if (sentences.length && /\b(Dr|Mr|Mrs|Ms|St|vs|No)\.$/.test(sentences[sentences.length - 1])) sentences[sentences.length - 1] += ` ${piece}`;
+    else sentences.push(piece);
+  }
+  let out = "";
+  for (const s of sentences) {
+    const next = out ? `${out} ${s}` : s;
+    if (next.length > DESC_MAX) break;
+    out = next;
+  }
+  if (out.length >= 70) return out;
+  const cut = text.slice(0, DESC_MAX - 1);
+  return `${cut.slice(0, cut.lastIndexOf(" ")).replace(/[\s,;:—–-]+$/, "")}…`;
+}
+
+function shellTop({ active, depth = 0, title, ogTitle, description, url, image, jsonld, type = "website", robots }) {
   const p = P(depth);
+  description = metaDescription(description);
+  image = image || PHOTO; // every page gets a picture when it is shared
   const items = [
     ["index.html", "Home"],
     ...ORDER.map((k) => [SECTIONS[k].page, SECTIONS[k].nav.replace("&", "&amp;")]),
@@ -116,12 +176,12 @@ function shellTop({ active, depth = 0, title, description, url, image, jsonld, t
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${esc(title)}</title>
   <meta name="description" content="${attr(description)}">
-  <meta name="author" content="Dr. Zahir Hasan">
+  <meta name="author" content="Dr. Zahir Hasan">${robots ? `\n  <meta name="robots" content="${attr(robots)}">` : ""}
   <link rel="canonical" href="${SITE}/${url}">
   <link rel="icon" href="${p}favicon.svg" type="image/svg+xml">
   <meta property="og:type" content="${type}">
   <meta property="og:site_name" content="Dr. Zahir Hasan">
-  <meta property="og:title" content="${attr(title)}">
+  <meta property="og:title" content="${attr(ogTitle || title)}">
   <meta property="og:description" content="${attr(description)}">
   <meta property="og:url" content="${SITE}/${url}">
   ${image ? `<meta property="og:image" content="${SITE}/${image}">\n  <meta name="twitter:card" content="summary_large_image">` : `<meta name="twitter:card" content="summary">`}
@@ -230,9 +290,13 @@ function homePage() {
     "@type": "Person",
     "@id": `${SITE}/#author`,
     name: "Dr. Zahir Hasan",
+    alternateName: "Zahir Hasan",
     url: SITE,
     image: `${SITE}/${PHOTO}`,
     jobTitle: "Author",
+    // the same person elsewhere, so search engines can tell this Zahir Hasan from others of the name
+    sameAs: ["https://www.amazon.com/stores/author/B0H97YZ9GT", "https://zachstera3.itch.io"],
+    worksFor: { "@type": "Organization", name: "Maple & Pine Press", url: "https://mapleandpinepress.com" },
     description: "Author of fantasy and science fiction, children's books, and works on politics, law and education. Based in Tokyo; published by Maple & Pine Press.",
     knowsAbout: ["Fantasy Fiction", "Science Fiction", "Children's Literature", "Political Science", "International Relations", "Law", "Education"],
   };
@@ -331,7 +395,7 @@ function sectionPage(key) {
     );
     const blocks = seriesNames.map((name) => {
       const inSeries = books.filter((b) => b.series?.name === name).sort((a, b) => a.series.order - b.series.order);
-      const page = name === "The Whispering Realms" ? "whispering-realms.html" : name === "The Elk Kingdom Chronicles" ? "elk-kingdom.html" : null;
+      const page = SERIES_PAGES[name] || null;
       return `<div class="series">
           <div class="sechead" style="margin-bottom:22px"><h2 style="font-size:24px">${esc(name)}</h2><div class="rule"></div>${page ? `<a href="${page}">About the series &rarr;</a>` : `<a href="${bookUrl(inSeries[0])}">Start with Book 1 &rarr;</a>`}</div>
           ${grid(inSeries)}
@@ -372,7 +436,9 @@ ${shellBottom(0, true)}`;
 // ─── Book pages ───────────────────────────────────────────────────────────
 function bookPage(b) {
   const s = SECTIONS[sec(b)];
-  const paras = (b.description?.length ? b.description : [b.authorSite?.blurb || ""]).filter(Boolean);
+  const paras = bookParas(b);
+  const summary = metaDescription(paras.length ? paras : b.title);
+  const seriesPage = b.series ? SERIES_PAGES[b.series.name] : null;
   const inSeries = b.series ? BOOKS.filter((x) => x.series?.name === b.series.name && x.slug !== b.slug) : [];
   const more = bySection(sec(b)).filter((x) => x.slug !== b.slug && !inSeries.includes(x)).slice(0, 4);
   const buy =
@@ -388,12 +454,12 @@ function bookPage(b) {
     "@type": "Book",
     name: b.title,
     ...(b.subtitle ? { alternateName: `${b.title}: ${b.subtitle}` } : {}),
-    author: { "@type": "Person", name: "Dr. Zahir Hasan", url: `${SITE}/` },
-    publisher: { "@type": "Organization", name: "Maple & Pine Press" },
+    author: { "@type": "Person", "@id": `${SITE}/#author`, name: "Dr. Zahir Hasan", url: `${SITE}/` },
+    publisher: { "@type": "Organization", name: "Maple & Pine Press", url: "https://mapleandpinepress.com" },
     image: `${SITE}/${full(b)}`,
     url: `${SITE}/${bookUrl(b)}`,
     inLanguage: "en",
-    ...(b.description?.[0] ? { description: b.description[0] } : {}),
+    ...(paras.length ? { description: summary } : {}),
     ...(b.series ? { isPartOf: { "@type": "BookSeries", name: b.series.name }, position: b.series.order } : {}),
     workExample: b.asins.map((a, i) => ({
       "@type": "Book",
@@ -405,8 +471,9 @@ function bookPage(b) {
     active: s.page,
     depth: 1,
     type: "book",
-    title: `${b.title}${b.subtitle ? `: ${b.subtitle}` : ""} — Dr. Zahir Hasan`,
-    description: (b.description?.[0] || b.authorSite?.blurb || b.title).slice(0, 300),
+    title: bookMetaTitle(b),
+    ogTitle: `${b.title}${b.subtitle ? `: ${b.subtitle}` : ""} — Dr. Zahir Hasan`,
+    description: summary,
     url: bookUrl(b),
     image: full(b),
     jsonld,
@@ -424,13 +491,13 @@ function bookPage(b) {
         <div class="bookcover"><img src="../${full(b)}" alt="${attr(b.title)} cover"${b.coverFit === "contain" ? ' class="contain"' : ""} width="900"></div>
         <div class="bookmeta">
           <div class="bookdesc">
-            ${paras.map((t) => `<p>${esc(t)}</p>`).join("\n            ")}
+            ${paras.map((t) => `<p>${esc(t).replace(/\*([^*\n]+)\*/g, "<em>$1</em>")}</p>`).join("\n            ")}
           </div>
           ${buy}
           <dl>
             <dt>Author</dt><dd>Dr. Zahir Hasan</dd>
             <dt>Publisher</dt><dd>Maple &amp; Pine Press, Tokyo</dd>
-            ${b.series ? `<dt>Series</dt><dd>${esc(seriesLabel(b))}</dd>` : ""}
+            ${b.series ? `<dt>Series</dt><dd>${esc(seriesLabel(b))}${seriesPage ? ` &middot; <a href="../${seriesPage}" style="color:var(--accent)">About the series</a>` : ""}</dd>` : ""}
             <dt>List</dt><dd><a href="../${s.page}" style="color:var(--accent)">${esc(s.title)}</a></dd>
           </dl>
           ${
@@ -450,7 +517,7 @@ function aboutPage() {
   return `${shellTop({
     active: "about.html",
     title: "About Dr. Zahir Hasan — Author, Tokyo",
-    description: "Zahir Hasan is a Canadian academic and author in Tokyo: fantasy and science fiction, children's books, and works on politics, law and education, all published by Maple & Pine Press.",
+    description: "Zahir Hasan is a Canadian academic and author in Tokyo, writing fantasy and science fiction, children's books, and works on politics, law and education.",
     url: "about.html",
     image: STUDIO,
   })}
@@ -627,8 +694,8 @@ function arcadeHubPage() {
     <div class="arc-hero">
       <div class="wrap arc-hero-in">
         <div class="arc-hero-text">
-          <div class="kicker" id="arc-hero-kicker">The Arcade</div>
-          <h1 id="arc-hero-title">${esc(feat.title)}</h1>
+          <h1 class="kicker arc-hero-h1" id="arc-hero-kicker">The Arcade</h1>
+          <h2 class="arc-hero-title" id="arc-hero-title">${esc(feat.title)}</h2>
           <p id="arc-hero-line">${esc(feat.tagline)}</p>
           <a class="hp-btn primary" id="arc-hero-play" href="${feat.slug}.html">Play now</a>
           <div class="arc-hero-note">${count} games &middot; free &middot; no ads &middot; nothing to install</div>
@@ -668,7 +735,7 @@ function arcadeGamePage(g) {
     active: "arcade/",
     depth: 1,
     title: `${g.title} — The Arcade`,
-    description: g.tagline,
+    description: g.about || g.tagline,
     url: arcadeUrl(g),
     image: g.cover,
     jsonld: {
@@ -680,7 +747,7 @@ function arcadeGamePage(g) {
       image: `${SITE}/${g.cover}`,
       genre: g.kind,
       gamePlatform: "Web browser",
-      author: { "@type": "Person", name: "Dr. Zahir Hasan", url: `${SITE}/` },
+      author: { "@type": "Person", "@id": `${SITE}/#author`, name: "Dr. Zahir Hasan", url: `${SITE}/` },
       offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
     },
   })}
@@ -692,7 +759,7 @@ function arcadeGamePage(g) {
         <button class="arc-fs" id="arc-fs" type="button" hidden>Full screen</button>
       </div>
       <div class="arc-stage" id="arc-stage" data-src="${attr(src)}" data-title="${attr(g.title)}">
-        <img class="arc-poster" src="../${g.cover}" alt="">
+        <img class="arc-poster" src="../${g.cover}" alt="${attr(g.title)} game cover">
         <div class="arc-start">
           <span class="arc-kind">${esc(g.kind)}</span>
           <button class="hp-btn primary" id="arc-start" type="button">Play</button>
@@ -719,6 +786,38 @@ function writeArcade() {
   return ARCADE.games.length;
 }
 
+// ─── The page shown for a wrong address ───────────────────────────────────
+// GitHub Pages serves 404.html for any address that does not exist, at any depth,
+// so every link and file on it starts from the top of the site.
+function notFoundPage() {
+  const page = `${shellTop({
+    active: null,
+    title: "Page not found — Dr. Zahir Hasan",
+    description: "That page is not here. Find every book by Dr. Zahir Hasan from the home page, or search the catalogue.",
+    url: "404.html",
+    robots: "noindex",
+  }).replace('<div class="site">', '<div class="site" data-pagefind-ignore="all">')}
+    <div class="pagehead">
+      <div class="wrap">
+        <div class="kicker">Page not found</div>
+        <h1 style="line-height:1.15">That page is not here</h1>
+        <p>The address may be mistyped, or the page may have moved. Everything on the site can be reached from the links below.</p>
+      </div>
+    </div>
+    <section class="band" style="padding-top:40px">
+      <div class="wrap">
+        <div class="btnrow" style="display:flex;flex-wrap:wrap;gap:12px">
+          <a href="index.html" class="buylink">Home</a>
+${ORDER.map((k) => `          <a href="${SECTIONS[k].page}" class="buylink alt">${esc(SECTIONS[k].title)}</a>`).join("\n")}
+          ${ARCADE ? '<a href="arcade/" class="buylink alt">The Arcade</a>' : ""}
+          <a href="search.html" class="buylink alt">Search the catalogue</a>
+        </div>
+      </div>
+    </section>
+${shellBottom(0)}`;
+  return page.replace(/\b(href|src)="(?!https?:|\/|#|mailto:|data:)/g, '$1="/');
+}
+
 // ─── Sitemap ──────────────────────────────────────────────────────────────
 function sitemap() {
   const today = new Date().toISOString().slice(0, 10);
@@ -733,6 +832,7 @@ for (const k of ORDER) writeFileSync(join(ROOT, SECTIONS[k].page), sectionPage(k
 for (const b of BOOKS) writeFileSync(join(ROOT, bookUrl(b)), bookPage(b));
 writeFileSync(join(ROOT, "about.html"), aboutPage());
 writeFileSync(join(ROOT, "contact.html"), contactPage());
+writeFileSync(join(ROOT, "404.html"), notFoundPage());
 writeFileSync(join(ROOT, "sitemap.xml"), sitemap());
 const arcadeCount = writeArcade();
 refreshLegacy();

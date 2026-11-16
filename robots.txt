@@ -1,4 +1,6 @@
 User-agent: *
 Allow: /
+# a working copy of one game's source files; the game itself is at /earthfall/
+Disallow: /earthfall/src/
 
 Sitemap: https://drzahirhasan.com/sitemap.xml
