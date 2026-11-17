@@ -125,16 +125,20 @@ const SERIES_PAGES = { ...HANDMADE_SERIES_PAGES, ...Object.fromEntries(SERIES_BU
 
 const bookParas = (b) => (b.description?.length ? b.description : [b.authorSite?.blurb || ""]).filter(Boolean);
 
+// "Title: Subtitle", or "Title? Subtitle" when the title already ends in its own mark.
+const titleJoin = (b) => (/[?!]$/.test(b.title) ? " " : ": ");
+const titleWithSubtitle = (b) => (b.subtitle ? `${b.title}${titleJoin(b)}${b.subtitle}` : b.title);
+
 // A book's <title>: as much of "Title: Subtitle" as fits, cut at a natural break in the subtitle.
 function bookMetaTitle(b) {
-  const full = b.subtitle ? `${b.title}: ${b.subtitle}` : b.title;
+  const full = titleWithSubtitle(b);
   if ((full + AUTHOR_SUFFIX).length <= TITLE_MAX) return full + AUTHOR_SUFFIX;
   if (full.length <= TITLE_MAX) return full;
   if (b.subtitle) {
     // A cut at a dash or colon leaves a whole phrase. A cut inside a list or before "and" is marked with an ellipsis.
     const cuts = [...b.subtitle.matchAll(/\s[—–-]\s|:\s|,\s|\sand\s/g)].map((m) => ({ at: m.index, whole: /[—–:-]/.test(m[0]) })).reverse();
     for (const { at, whole } of cuts) {
-      const t = `${b.title}: ${b.subtitle.slice(0, at)}${whole ? "" : "…"}`;
+      const t = `${b.title}${titleJoin(b)}${b.subtitle.slice(0, at)}${whole ? "" : "…"}`;
       if (t.length <= TITLE_MAX) return t;
     }
   }
@@ -470,7 +474,7 @@ function bookPage(b) {
     "@context": "https://schema.org",
     "@type": "Book",
     name: b.title,
-    ...(b.subtitle ? { alternateName: `${b.title}: ${b.subtitle}` } : {}),
+    ...(b.subtitle ? { alternateName: titleWithSubtitle(b) } : {}),
     author: { "@type": "Person", "@id": `${SITE}/#author`, name: "Dr. Zahir Hasan", url: `${SITE}/` },
     publisher: { "@type": "Organization", name: "Maple & Pine Press", url: "https://mapleandpinepress.com" },
     image: `${SITE}/${full(b)}`,
@@ -489,7 +493,7 @@ function bookPage(b) {
     depth: 1,
     type: "book",
     title: bookMetaTitle(b),
-    ogTitle: `${b.title}${b.subtitle ? `: ${b.subtitle}` : ""} — Dr. Zahir Hasan`,
+    ogTitle: `${titleWithSubtitle(b)} — Dr. Zahir Hasan`,
     description: summary,
     url: bookUrl(b),
     image: full(b),

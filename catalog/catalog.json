@@ -6,7 +6,7 @@
   "fiction": "Fantasy & Speculative Fiction",
   "kids": "Children's Books"
  },
- "_updated": "2026-11-16",
+ "_updated": "2026-11-17",
  "books": [
   {
    "slug": "a-land-unknown",
@@ -125,6 +125,46 @@
    }
   },
   {
+   "slug": "duty-of-care",
+   "title": "Duty of Care",
+   "subtitle": "Big Tech, Children, and the Battle to Make Social Media Safe",
+   "author": "Dr. Zahir Hasan",
+   "list": "policy",
+   "status": "published",
+   "asins": [
+    "B0HM4HCF29",
+    "4911951028"
+   ],
+   "description": [
+    "Who builds the room children enter?",
+    "On August 26, 2026, a federal judge in Oakland approved a court-ordered overhaul of Instagram and Facebook for teenagers: default time limits, a midnight lockout, quiet hours during school, and payments of up to $17.1 billion. It was the most concrete answer yet to a question that parents, engineers, whistleblowers, scientists and judges had fought over for a decade.",
+    "Duty of Care tells that story through the people who lived it: the designers who built the endless feed and later regretted it, the engineer who wrote to Mark Zuckerberg about his own daughter, the whistleblower who carried internal research to Congress, the parents who held up photographs in a Senate hearing room, and the state investigators who created a fictional 13-year-old to see what a platform would send her.",
+    "It follows the law as it caught up, from Section 230 and the children's privacy law of 1998 to the Los Angeles and New Mexico verdicts and the Oakland consent judgment, read term by term. It weighs the scientific evidence fairly, keeping allegation apart from finding, and it compares the very different paths taken by Britain, the European Union, Australia, Canada and Japan.",
+    "Then it turns practical. The book sets out a ten-part duty of care standard and a Toolkit of complete, filled-in models: a youth safety impact assessment, a 90-day platform plan, a family media agreement, a school response protocol for sextortion, a public audit scorecard, model legislative language, ten questions to ask before believing a safety announcement, and an implementation register for the Oakland settlement.",
+    "For parents, teachers, school leaders, policymakers, lawyers and anyone who builds technology that children use."
+   ],
+   "cover": "covers/duty-of-care.jpg",
+   "coverFit": null,
+   "series": null,
+   "isbn": {
+    "paperback": null,
+    "hardcover": null
+   },
+   "press": {
+    "href": "/book/duty-of-care",
+    "pill": "Politics & International Affairs",
+    "featured": false,
+    "featuredOrder": null
+   },
+   "authorSite": {
+    "show": true,
+    "section": "policy",
+    "blurb": "Who builds the room children enter? On August 26, 2026, a federal judge in Oakland approved a court-ordered overhaul of Instagram and Facebook for teenagers: default time limits, a midnight lockout, quiet hours during school, and payments of up to $17.1 billion.",
+    "featured": false,
+    "amazonJp": false
+   }
+  },
+  {
    "slug": "elbows-up",
    "title": "Elbows Up",
    "subtitle": "Canada, the United States, and the Rupture of a Continental Partnership",
@@ -161,6 +201,44 @@
     "show": true,
     "section": "policy",
     "blurb": "Canada, the United States, and the Rupture of a Continental Partnership. How the deepest trade relationship of the postwar era came apart between 2025 and 2026 — and what the break means for both countries.",
+    "featured": false,
+    "amazonJp": false
+   }
+  },
+  {
+   "slug": "is-it-time-to-end-the-united-nations",
+   "title": "Is It Time to End the United Nations?",
+   "subtitle": "Power, Legitimacy, and the Future of Collective Security",
+   "author": "Dr. Zahir Hasan",
+   "list": "policy",
+   "status": "published",
+   "asins": [
+    "B0HL5KX3Y6",
+    "4911951001"
+   ],
+   "description": [
+    "In one week of September 2026 the General Assembly heard the president of a permanent member weigh aloud whether to annihilate another member's government, and, two days later, a prime minister wanted by the International Criminal Court. Seven months earlier the Security Council had condemned Iran's retaliation for the strikes that began the war, and never once voted on the strikes themselves.",
+    "Is it time to end the United Nations? Zahir Hasan asks the question in earnest. He follows the idea of world organization from the Concert of Europe to the League of Nations' last Assembly in Geneva, shows how the veto was priced and paid for at Yalta and San Francisco, and reads the record of the last decade, Gaza, Ukraine, Sudan, the Iran war, the money and the machine, against the condition the founders themselves wrote down in 1945: that an organization unable to keep the peace, or able to keep it only at the expense of law and justice, should expect to be dissolved.",
+    "His answer is not yet, and not like that. The book proposes a Second Charter, drafted by a General Conference under Article 109 of the Charter, the one route to reform that the veto cannot block, with a fixed date for the five permanent members to accept it or be left behind, and a calendar that runs from 2027 to 2031. It tests the design against the vetoes of the last decade, and the model texts, including a complete draft resolution and draft treaty articles, are in the appendices.",
+    "Fifteen chapters, four appendices, more than 570 sources, research current to 26 September 2026."
+   ],
+   "cover": "covers/is-it-time-to-end-the-united-nations.jpg",
+   "coverFit": null,
+   "series": null,
+   "isbn": {
+    "paperback": null,
+    "hardcover": null
+   },
+   "press": {
+    "href": "/book/is-it-time-to-end-the-united-nations",
+    "pill": "Politics & International Affairs",
+    "featured": false,
+    "featuredOrder": null
+   },
+   "authorSite": {
+    "show": true,
+    "section": "policy",
+    "blurb": "In one week of September 2026 the General Assembly heard the president of a permanent member weigh aloud whether to annihilate another member's government, and, two days later, a prime minister wanted by the International Criminal Court.",
     "featured": false,
     "amazonJp": false
    }
@@ -1478,6 +1556,48 @@
     "show": true,
     "section": "fiction",
     "blurb": "Aiko Tanaka gives the forest a poem every morning at 05:40.",
+    "featured": false,
+    "amazonJp": false
+   }
+  },
+  {
+   "slug": "the-library-of-second-light",
+   "title": "The Library of Second Light",
+   "subtitle": null,
+   "author": "Dr. Zahir Hasan",
+   "list": "fiction",
+   "status": "published",
+   "asins": [
+    "B0GX8B1L8Y"
+   ],
+   "description": [
+    "Some light returns.",
+    "Every lamp that ever burned on Earth sent its light outward. Nearly all of it travels forever. A little strikes interstellar dust, turns, and comes home a hundred years later.",
+    "Mara Quill was born on the Moon and has never seen a forest. At the Library, a lattice of dark frames a million and a half kilometers beyond Earth, her work is to catch that returning light and rebuild the hours it once fell on. A wedding no camera recorded. A festival lit by candles after the power failed. A teacher still teaching in a classroom the school had closed.",
+    "Then she finds the holes. They are rectangular, and nothing in nature is rectangular. There are four thousand of them, reaching back a hundred and fifty years, and every one sits on top of a disaster that did not happen.",
+    "Something has been editing the light. It has left one hour uncut. Kyoto, 2071, thirty-seven years before Mara was born. A woman kneels at a canal and lifts from the water a device that will not be built for decades yet.",
+    "The woman is Mara."
+   ],
+   "cover": "covers/the-library-of-second-light.jpg",
+   "coverFit": null,
+   "series": {
+    "name": "The Second Light Sequence",
+    "order": 1
+   },
+   "isbn": {
+    "paperback": null,
+    "hardcover": null
+   },
+   "press": {
+    "href": "/book/the-library-of-second-light",
+    "pill": "Fantasy & Speculative Fiction",
+    "featured": false,
+    "featuredOrder": null
+   },
+   "authorSite": {
+    "show": true,
+    "section": "fiction",
+    "blurb": "Some light returns. Every lamp that ever burned on Earth sent its light outward. Nearly all of it travels forever. A little strikes interstellar dust, turns, and comes home a hundred years later.",
     "featured": false,
     "amazonJp": false
    }
