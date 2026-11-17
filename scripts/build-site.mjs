@@ -251,6 +251,7 @@ ${ORDER.map((k) => `          <a href="${p}${SECTIONS[k].page}">${SECTIONS[k].na
           <a href="https://www.amazon.com/Dr-Zahir-Hasan/e/B0H97YZ9GT" rel="noopener">Amazon author page</a>
           <a href="https://movementforaction.org" rel="noopener">Movement for Action</a>
           <a href="https://zachstera3.itch.io" rel="noopener">Games on itch.io</a>
+          <a href="https://zahirhasanauthor.com" rel="noopener">Author page at Tertulia</a>
         </div>
       </div>
       <div class="fbottom">
@@ -311,7 +312,7 @@ function homePage() {
     image: `${SITE}/${PHOTO}`,
     jobTitle: "Author",
     // the same person elsewhere, so search engines can tell this Zahir Hasan from others of the name
-    sameAs: ["https://www.amazon.com/stores/author/B0H97YZ9GT", "https://zachstera3.itch.io"],
+    sameAs: ["https://www.amazon.com/stores/author/B0H97YZ9GT", "https://zachstera3.itch.io", "https://zahirhasanauthor.com"],
     worksFor: { "@type": "Organization", name: "Maple & Pine Press", url: "https://mapleandpinepress.com" },
     description: "Author of fantasy and science fiction, children's books, and works on politics, law and education. Based in Tokyo; published by Maple & Pine Press.",
     knowsAbout: ["Fantasy Fiction", "Science Fiction", "Children's Literature", "Political Science", "International Relations", "Law", "Education"],
