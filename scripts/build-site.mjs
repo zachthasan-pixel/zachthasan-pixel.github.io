@@ -31,8 +31,11 @@ function loadArcade() {
   }
 }
 const ARCADE = loadArcade();
-const PHOTO = "images/author/zahir-hasan.jpg";
-const STUDIO = "images/author/zahir-hasan-studio.jpg";
+// The author's photos. Both come from one picture taken in November 2026: the portrait is
+// cut from it (4:5, for the home page and for link previews) and the studio photo is the
+// whole of it (About page). The earlier pair is still in images/author/, no longer used.
+const PHOTO = "images/author/zahir-hasan-2026-11.jpg";
+const STUDIO = "images/author/zahir-hasan-studio-2026-11.jpg";
 
 // ─── Sections as the author site presents them ────────────────────────────
 const SECTIONS = {
@@ -336,7 +339,7 @@ function homePage() {
         </div>
         <div class="hero-photo">
           <div class="badge">${BOOKS.length} books</div>
-          <img src="${PHOTO}" alt="Dr. Zahir Hasan" width="1040" height="1300">
+          <img src="${PHOTO}" alt="Dr. Zahir Hasan" width="928" height="1160">
         </div>
       </div>
     </div>
