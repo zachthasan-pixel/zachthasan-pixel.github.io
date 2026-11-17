@@ -228,8 +228,9 @@ function spawnBoss(kind) {
 }
 
 // ---------------------------------------------------------------- effects
-function explode(pos, color, size = 1, big = false) {
-  const N = big ? 90 : 28;
+function explode(pos, color, size = 1, big = false, quiet = false) {
+  // quiet: a few silent sparks where a laser or a fighter bites, not a full explosion
+  const N = quiet ? 9 : big ? 90 : 28;
   const p = new Float32Array(N * 3), v = [];
   for (let i = 0; i < N; i++) {
     p.set([pos.x, pos.y, pos.z], i * 3);
@@ -240,8 +241,8 @@ function explode(pos, color, size = 1, big = false) {
   const pts = new THREE.Points(g, m); scene.add(pts);
   const flash = new THREE.Mesh(new THREE.SphereGeometry(0.22 * size, 12, 8), new THREE.MeshBasicMaterial({ color: 0xfff1d0, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false }));
   flash.position.copy(pos); scene.add(flash);
-  fx.push({ kind: 'boom', pts, v, flash, life: big ? 1.4 : 0.8, t: 0, size });
-  audio.explosion(big);
+  fx.push({ kind: 'boom', pts, v, flash, life: quiet ? 0.4 : big ? 1.4 : 0.8, t: 0, size });
+  if (!quiet) audio.explosion(big);
 }
 function empWave(pos, radius) {
   const m = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 20), new THREE.MeshBasicMaterial({ color: 0x9fe0ff, transparent: true, opacity: 0.5, wireframe: true, blending: THREE.AdditiveBlending, depthWrite: false }));
@@ -597,11 +598,33 @@ function launchSquad(origin, at, count, life) {
   squads.push({ group: g, ships, pos: origin.clone(), dest: at.clone(), life, target: null, dps: 3.2 });
 }
 
+// ---------------------------------------------------------------- hit feedback
+// A hit has to show on the target. A bar over a damaged ship says how much it has left
+// (blue while its shield holds, then green to red for the hull), and lasers and fighters
+// throw sparks where they bite. Before this, only a missile strike or a kill showed.
+function showHull(e) {
+  if (!e.bar) {
+    const w = Math.max(0.9, e.d.size * 2.2), up = e.d.size * 1.3 + 0.55;
+    const bg = new THREE.Sprite(new THREE.SpriteMaterial({ color: 0x05080f, transparent: true, opacity: 0.8, depthTest: false }));
+    const fill = new THREE.Sprite(new THREE.SpriteMaterial({ color: 0x7dff6a, transparent: true, depthTest: false }));
+    bg.scale.set(w + 0.1, 0.2, 1); bg.renderOrder = 998; fill.renderOrder = 999;
+    // both sit at the ship's centre and are lifted on screen, so the bar stays above the
+    // ship however the ship is turned
+    bg.center.set(0.5, 0.5 - up / 0.2);
+    e.group.add(bg, fill); e.bar = { fill, w, up };
+  }
+  const shielded = e.shield > 0;
+  const k = Math.min(1, Math.max(0.001, shielded ? e.shield / e.maxShield : e.hp / e.maxHp));
+  e.bar.fill.scale.set(e.bar.w * k, 0.11, 1);
+  e.bar.fill.center.set(0.5 / k, 0.5 - e.bar.up / 0.11); // pinned to the bar's left end as it shrinks
+  e.bar.fill.material.color.setHex(shielded ? 0x5ab8ff : k > 0.5 ? 0x7dff6a : k > 0.25 ? 0xffd23f : 0xff3a4a);
+}
 function damageEnemy(e, amt, src) {
   if (!e.alive) return;
-  if (e.shield > 0) { e.shield -= amt; if (e.shield < 0) { e.hp += e.shield; e.shield = 0; } e.flash = 0.1; return; }
+  if (src !== 'missile' && !(e.sparkT > 0)) { e.sparkT = 0.16; explode(e.group.position, e.shield > 0 ? 0x7ab8ff : 0xffd9a0, 0.35, false, true); }
+  if (e.shield > 0) { e.shield -= amt; if (e.shield < 0) { e.hp += e.shield; e.shield = 0; } e.flash = 0.1; showHull(e); return; }
   e.hp -= amt; e.flash = 0.1;
-  if (e.hp <= 0) killEnemy(e, src);
+  if (e.hp <= 0) killEnemy(e, src); else showHull(e);
 }
 function killEnemy(e, src) {
   e.alive = false;
@@ -705,6 +728,7 @@ function update(dt) {
     if (!e.alive) { scene.remove(e.group); enemies.splice(i, 1); continue; }
     const p = e.group.position;
     e.mesh.rotation.x += e.spin.x * dt; e.mesh.rotation.y += e.spin.y * dt;
+    if (e.sparkT > 0) e.sparkT -= dt;
     if (e.flash > 0) { e.flash -= dt; e.mesh.traverse((o) => { if (o.material && o.material.emissiveIntensity !== undefined) o.material.emissiveIntensity = 1.8; }); }
     else e.mesh.traverse((o) => { if (o.material && o.material.emissiveIntensity !== undefined) o.material.emissiveIntensity = e.type === 'mothership' ? 0.8 : 0.7; });
     if (e.bubble) { e.bubble.visible = e.shield > 0; e.bubble.material.opacity = 0.15 + 0.12 * Math.sin(game.t * 5); }
@@ -833,7 +857,11 @@ function update(dt) {
       f.pts.geometry.attributes.position.needsUpdate = true;
       f.pts.material.opacity = 1 - k;
       f.flash.scale.setScalar(1 + k * 2); f.flash.material.opacity = 0.9 * (1 - k * 2);
-      if (k >= 1) { scene.remove(f.pts); scene.remove(f.flash); fx.splice(i, 1); }
+      if (k >= 1) {
+        scene.remove(f.pts); scene.remove(f.flash); fx.splice(i, 1);
+        // free what the effect used; sparks now fire often enough for this to matter
+        f.pts.geometry.dispose(); f.pts.material.dispose(); f.flash.geometry.dispose(); f.flash.material.dispose();
+      }
     } else if (f.kind === 'emp') {
       f.mesh.scale.setScalar(0.2 + f.radius * k); f.mesh.material.opacity = 0.6 * (1 - k);
       if (k >= 1) { scene.remove(f.mesh); fx.splice(i, 1); }

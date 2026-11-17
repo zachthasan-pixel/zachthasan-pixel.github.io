@@ -22,6 +22,44 @@
   }
   function clampArena(o, r) { var d = Math.hypot(o.x, o.z), m = W.arenaR - r; if (d > m) { o.x = o.x / d * m; o.z = o.z / d * m; } }
 
+  // ---------- hit feedback ----------
+  // A hit has to show. Every time a shot lands on a pod or an alien: the target jolts and
+  // flashes, sparks fly off it, the damage pops up as a number, and a bar over the target
+  // shows how much it has left. Before this, a pod looked the same from the first hit to
+  // the one before it broke.
+  var numHost = null, numPool = [], numLive = 0;
+  function dmgNumber(x, y, z, dmg, color, big) {
+    if (numLive >= 26 || dmg >= 9000) return;
+    var sc = W.worldToScreen(x, y, z);
+    if (sc.behind || sc.x < -20 || sc.y < -20 || sc.x > window.innerWidth + 20 || sc.y > window.innerHeight + 20) return;
+    if (!numHost) {
+      numHost = document.createElement('div'); numHost.id = 'dmgnums'; numHost.className = 'layer';
+      var hud = document.getElementById('hud'); document.body.insertBefore(numHost, hud || null);
+    }
+    var el = numPool.pop() || document.createElement('div');
+    el.className = 'dmgnum' + (big ? ' big' : '');
+    el.textContent = Math.max(1, Math.round(dmg));
+    el.style.left = (sc.x + U.rand(-16, 16)) + 'px'; el.style.top = (sc.y + U.rand(-8, 8)) + 'px'; el.style.color = color;
+    el.style.animation = 'none'; numHost.appendChild(el); void el.offsetWidth; el.style.animation = '';
+    numLive++;
+    setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); numPool.push(el); numLive--; }, 640);
+  }
+  function hpBar(T, width, height) {
+    var grp = new THREE.Group();
+    var bg = new THREE.Sprite(new THREE.SpriteMaterial({ color: 0x140a18, transparent: true, opacity: 0.85, depthTest: false }));
+    var fill = new THREE.Sprite(new THREE.SpriteMaterial({ color: 0x7dff6a, transparent: true, depthTest: false }));
+    bg.scale.set(width + 0.14, 0.3, 1); bg.renderOrder = 998; fill.renderOrder = 999;
+    grp.add(bg); grp.add(fill); grp.position.y = height; T.R.group.add(grp);
+    return { fill: fill, w: width };
+  }
+  function showHp(T, width, height) {
+    if (!T.bar) T.bar = hpBar(T, width, height);
+    var k = U.clamp(T.hp / (T.maxHp || T.hp || 1), 0.001, 1), f = T.bar.fill;
+    // the fill stays pinned to the left end of the bar as it shrinks
+    f.scale.set(T.bar.w * k, 0.18, 1); f.center.set(0.5 / k, 0.5);
+    f.material.color.setHex(k > 0.5 ? 0x7dff6a : k > 0.25 ? 0xffd23f : 0xff3a4a);
+  }
+
   GM.stats = function () {
     var h = g.hero, wpn = PB.WEAPONS[g.weapon], glass = g.mod === 'glass';
     h.maxHp = (100 + 15 * PB.perkLvl('armor') + 25 * up('hp')) * (glass ? 0.5 : 1);
@@ -228,9 +266,14 @@
     opts = opts || {};
     var crit = !opts.noCrit && Math.random() < g.hero.crit;
     dmg *= dexBonus(e.type) * (crit ? 2.5 : 1);
-    e.hp -= dmg; e.flash = 0.08;
+    if (!e.maxHp) e.maxHp = e.hp;
+    e.hp -= dmg; e.flash = 0.13;
+    if (e.baseS == null) e.baseS = e.R.group.scale.x;
+    e.punch = 1;
+    dmgNumber(e.x, e.y + (e.boss ? 3.2 : 1.5 + e.r), e.z, dmg, crit ? '#ffe040' : '#ffffff', crit);
+    if (!e.boss && e.hp > 0) showHp(e, U.clamp(e.r * 2.2, 1.1, 2.6), 1.7 + e.r * 1.5);
     if (opts.slow) e.slowT = 1.5;
-    if (crit) W.burst(e.x, e.y + 1.2, e.z, 0xffe040, 5, 6, 0.3, 0.3);
+    if (crit) W.burst(e.x, e.y + 1.2, e.z, 0xffe040, 8, 6, 0.35, 0.4);
     if (!opts.silent) A.sfx('hit', crit ? 1.4 : 1);
     if (e.hp <= 0) killEnemy(e);
   }
@@ -356,8 +399,11 @@
     return best;
   }
   function damagePod(p, dmg) {
-    p.hp -= dmg * (1 + 0.7 * up('pod')); p.flash = 0.08; A.sfx('hit', 0.7);
-    W.burst(p.x, 1.2, p.z, 0xff7ac8, 3, 5, 0.3, 0.25);
+    dmg *= 1 + 0.7 * up('pod');
+    p.hp -= dmg; p.flash = 0.13; p.punch = 1; A.sfx('hit', 0.7);
+    W.burst(p.x, 1.4, p.z, 0xff7ac8, 9, 7, 0.4, 0.42); W.burst(p.x, 1.4, p.z, 0xffffff, 3, 5, 0.25, 0.3);
+    dmgNumber(p.x, 3, p.z, dmg, '#ff9ad6', false);
+    if (p.hp > 0) showHp(p, 2.2, 3.5);
     if (p.hp <= 0) killPod(p, true);
   }
   function explode(x, z, r, dmg, color) {
@@ -497,7 +543,8 @@
       p.hatchT -= dt; p.flash -= dt;
       var f = p.hatchT / p.hatchMax;
       var wob = f < 0.35 ? Math.sin(g.t * (40 - f * 60)) * (0.35 - f) * 0.5 : 0;
-      p.R.body.rotation.z = wob; p.R.body.scale.setScalar(1 + (1 - f) * 0.12);
+      p.punch = Math.max(0, (p.punch || 0) - dt * 9);
+      p.R.body.rotation.z = wob; p.R.body.scale.setScalar((1 + (1 - f) * 0.12) * (1 + 0.14 * p.punch));
       p.R.mat.emissiveIntensity = p.flash > 0 ? 6 : 1.4 + (1 - f) * 2.5 + (f < 0.3 ? Math.sin(g.t * 25) * 1.5 : 0);
       if (doRing && p.R.timer.visible) {
         p.R.timer.geometry.dispose(); p.R.timer.geometry = new THREE.RingGeometry(1.5, 1.85, 40, 1, Math.PI / 2, Math.PI * 2 * Math.max(0.001, f));
@@ -563,6 +610,7 @@
       clampArena(e, e.r);
       // visuals
       var R = e.R; R.group.position.set(e.x, e.y, e.z);
+      if (e.baseS != null) { e.punch = Math.max(0, e.punch - dt * 9); R.group.scale.setScalar(e.baseS * (1 + 0.16 * e.punch)); }
       if (e.state !== 'wind') { var fy = Math.atan2(e.vx, e.vz), cur = R.group.rotation.y; if (Math.hypot(e.vx, e.vz) > 0.3 || d < reach + 1) R.group.rotation.y = cur + U.angWrap((Math.hypot(e.vx, e.vz) > 0.3 ? fy : Math.atan2(nx, nz)) - cur) * Math.min(1, dt * 10); }
       R.body.position.z *= 0.85;
       M.animAlien(R, e.t, Math.min(1, Math.hypot(e.vx, e.vz) / 2 + (moving ? 0.2 : 0)), special);
@@ -627,9 +675,14 @@
   function stepBullets(dt) {
     for (var i = g.bullets.length - 1; i >= 0; i--) {
       var b = g.bullets[i];
-      b.x += b.vx * dt; b.z += b.vz * dt; b.life -= dt;
-      b.obj.group.position.set(b.x, b.turret ? 1.1 : 1.35, b.z);
+      b.life -= dt;
       var dead = b.life <= 0;
+      // A fast shot is moved in short hops and checked at each one. Moved in a single jump,
+      // the Rail Lance covered more ground per step than a Skitter is wide, and about one
+      // shot in four went straight through its target without counting.
+      var hops = Math.max(1, Math.ceil(Math.hypot(b.vx, b.vz) * dt / 0.6)), hdt = dt / hops;
+      for (var hop = 0; hop < hops && !dead; hop++) {
+      b.x += b.vx * hdt; b.z += b.vz * hdt;
       if (!dead) {
         for (var c = 0; c < W.colliders.length; c++) { var C = W.colliders[c]; if (U.dist2(b.x, b.z, C.x, C.z) < C.r * C.r * 0.8) { dead = true; W.burst(b.x, 1.2, b.z, b.color, 4, 4, 0.2, 0.2); break; } }
       }
@@ -638,7 +691,7 @@
         var rr = e.r + 0.25; if (U.dist2(b.x, b.z, e.x, e.z) > rr * rr) continue;
         b.hit.push(e);
         damageEnemy(e, b.dmg, { slow: up('cryo') > 0 && !b.turret });
-        W.burst(b.x, 1.3, b.z, b.color, 3, 4, 0.2, 0.22);
+        W.burst(b.x, 1.3, b.z, b.color, 7, 6, 0.3, 0.36);
         if (!b.turret) {
           if (up('nova')) explode(b.x, b.z, 1.6 + up('nova') * 0.6, b.dmg * (0.3 + 0.15 * up('nova')), 0xff9a2e);
           if (up('tesla') && Math.random() < 0.12 + 0.1 * up('tesla')) teslaChain(e, b.dmg * 0.6);
@@ -649,9 +702,12 @@
         var p = g.pods[k]; if (p.state !== 'land') continue;
         if (U.dist2(b.x, b.z, p.x, p.z) < (p.r + 0.25) * (p.r + 0.25)) { damagePod(p, b.dmg); dead = true; break; }
       }
+      }
+      b.obj.group.position.set(b.x, b.turret ? 1.1 : 1.35, b.z);
       if (dead) { rem(b.obj.group); g.bullets.splice(i, 1); }
     }
   }
+  GM._stepBullets = stepBullets; // for tests
   function teslaChain(from, dmg) {
     var last = from, hits = [from];
     for (var c = 0; c < 2; c++) {
