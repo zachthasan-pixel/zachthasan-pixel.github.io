@@ -98,6 +98,11 @@ const full = (b) => `images/covers/${b.slug}.jpg`;
 const sec = (b) => b.authorSite?.section || b.list;
 const amazon = (asin) => `https://www.amazon.com/dp/${asin}`;
 const amazonJp = (asin) => `https://www.amazon.co.jp/dp/${asin}`;
+// The book's own page in the other stores that sell it: [store name, address].
+const storeLinks = (b) => [
+  ...(b.links?.apple ? [["Apple Books", b.links.apple]] : []),
+  ...(b.links?.google ? [["Google Play", b.links.google]] : []),
+];
 const bySection = (key) => BOOKS.filter((b) => sec(b) === key);
 const seriesLabel = (b) => (b.series ? `${b.series.name} · Book ${b.series.order}` : null);
 const P = (depth) => (depth ? "../" : "");
@@ -335,7 +340,7 @@ function homePage() {
           <div class="kicker">Author &middot; Tokyo</div>
           <h1>Stories that shape how we see the world</h1>
           <p class="sub">Fantasy and science fiction for grown-ups. Illustrated books for children. Clear-eyed writing on politics, law and education.</p>
-          <p class="blurb">${BOOKS.length} books across four lists, all published by Maple &amp; Pine Press, the small independent press he founded in Tokyo. Start with the fiction, or with whatever the news has made you curious about.</p>
+          <p class="blurb">${BOOKS.length} books across four lists, all published by Maple &amp; Pine Press, the small independent press he founded in Tokyo. They are sold on Amazon, Apple Books and Google Play, and many of the paperbacks can be ordered from Barnes &amp; Noble and other bookshops. Start with the fiction, or with whatever the news has made you curious about.</p>
           <div class="btnrow">
             <a href="fiction.html" class="hp-btn primary">Fantasy &amp; Sci-Fi</a>
             <a href="childrens-books.html" class="hp-btn ghost">Children's Books</a>
@@ -462,12 +467,23 @@ function bookPage(b) {
   const seriesPage = b.series ? SERIES_PAGES[b.series.name] : null;
   const inSeries = b.series ? BOOKS.filter((x) => x.series?.name === b.series.name && x.slug !== b.slug) : [];
   const more = bySection(sec(b)).filter((x) => x.slug !== b.slug && !inSeries.includes(x)).slice(0, 4);
+  const stores = storeLinks(b);
+  // Amazon first where the book is there; a book sold only elsewhere leads with that store.
+  const buttons = [
+    ...(b.asins.length
+      ? [
+          `<a class="buylink" href="${amazon(b.asins[0])}" rel="noopener">Buy on Amazon</a>`,
+          `<a class="buylink alt" href="${amazonJp(b.asins[0])}" rel="noopener">Amazon Japan</a>`,
+          ...(b.asins[1] ? [`<a class="buylink alt" href="${amazon(b.asins[1])}" rel="noopener">Paperback</a>`] : []),
+        ]
+      : []),
+    ...stores.map(([name, url], i) => `<a class="buylink${b.asins.length || i ? " alt" : ""}" href="${url}" rel="noopener">${b.asins.length ? name : `Buy on ${name}`}</a>`),
+  ];
   const buy =
-    b.status === "forthcoming" || !b.asins.length
+    b.status === "forthcoming" || !buttons.length
       ? `<p class="soonnote">Forthcoming. Join the newsletter below to hear when it is out.</p>`
       : `<div class="buyrow">
-              <a class="buylink" href="${amazon(b.asins[0])}" rel="noopener">Buy on Amazon</a>
-              <a class="buylink alt" href="${amazonJp(b.asins[0])}" rel="noopener">Amazon Japan</a>${b.asins[1] ? `\n              <a class="buylink alt" href="${amazon(b.asins[1])}" rel="noopener">Paperback</a>` : ""}
+              ${buttons.join("\n              ")}
             </div>
             <p class="buynote">Ebook${b.asins[1] ? " and paperback" : ""} &middot; Maple &amp; Pine Press</p>`;
   const jsonld = {
@@ -482,11 +498,14 @@ function bookPage(b) {
     inLanguage: "en",
     ...(paras.length ? { description: summary } : {}),
     ...(b.series ? { isPartOf: { "@type": "BookSeries", name: b.series.name, ...(seriesPage ? { url: `${SITE}/${seriesPage}` } : {}) }, position: b.series.order } : {}),
-    workExample: b.asins.map((a, i) => ({
-      "@type": "Book",
-      bookFormat: i === 0 ? "https://schema.org/EBook" : "https://schema.org/Paperback",
-      url: amazon(a),
-    })),
+    workExample: [
+      ...b.asins.map((a, i) => ({
+        "@type": "Book",
+        bookFormat: i === 0 ? "https://schema.org/EBook" : "https://schema.org/Paperback",
+        url: amazon(a),
+      })),
+      ...stores.map(([, url]) => ({ "@type": "Book", bookFormat: "https://schema.org/EBook", url })),
+    ],
   };
   return `${shellTop({
     active: s.page,
@@ -575,10 +594,13 @@ function seriesPage(name) {
     hasPart: books.map((b) => ({ "@type": "Book", name: fullName(b), position: b.series.order, url: `${SITE}/${bookUrl(b)}`, image: `${SITE}/${full(b)}` })),
   };
   const row = (b) => {
+    const [store] = storeLinks(b);
     const buy =
-      b.status === "forthcoming" || !b.asins.length
+      b.status === "forthcoming" || (!b.asins.length && !store)
         ? ""
-        : `\n              <a class="buylink alt" href="${amazon(b.asins[0])}" rel="noopener">Buy on Amazon</a>`;
+        : b.asins.length
+          ? `\n              <a class="buylink alt" href="${amazon(b.asins[0])}" rel="noopener">Buy on Amazon</a>`
+          : `\n              <a class="buylink alt" href="${store[1]}" rel="noopener">Buy on ${store[0]}</a>`;
     return `<li>
             <a class="ro-cover" href="../${bookUrl(b)}"><img src="../${thumb(b)}" alt="${attr(fullName(b))} cover" loading="lazy" width="480"></a>
             <div>
